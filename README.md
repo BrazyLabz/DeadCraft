@@ -68,6 +68,11 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | **World generation** (cities, roads, biomes, caves, ores) | `js/worldgen.js` |
 | **Zombie behaviour** | `js/entities.js` |
 | **Cars** (speed, fuel, HP, and the box models) | `js/data/vehicles.js`. Add your own with `DC.registerVehicle` |
+| **How many abandoned cars spawn** | `carChance` in `DC.config` at the top of `js/core.js` |
+| **Doors, wall torches, paint rules** | `js/interact.js` |
+| **Falling trees** (apple / stick chances) | `js/trees.js` |
+| **Garages, driveways, house roofs** | `js/worldgen.js` (`housePlan`, `garageColumn`, `house7`) |
+| **Your empty-hand arm angle** | `js/viewmodel.js` (`ARM`) |
 | **Driving / refuel / car breaking** | `js/vehicles.js` |
 
 A missing texture shows as a purple/black checkerboard, so you can see what still needs painting.
@@ -95,6 +100,44 @@ DC.on('nightStart', day => DC.ui.notify('Night ' + day + ' begins!'));
 **Console cheats for testing** (press F12 → Console):
 - `DC.give('iron_machete')` gives you an item.
 - `DC.game.time = 590` skips to just before nightfall.
+
+## v0.9 notes: beds, sleeping, flowers, dyes, buckets
+- **Beds** are now real Minecraft-style beds: 2 blocks long, 1 wide, on little wooden legs, with a white pillow at the head. The pillow end goes away from you when you place one. You can stand on them.
+- **Sleep:** right-click a bed at night. The screen fades to black and the night is skipped. A bed takes **5 seconds** to fall asleep, a **sleeping bag 15 seconds**. Sleeping also sets your respawn point.
+  - You can't sleep while zombies are hunting you nearby.
+  - Getting hurt wakes you up. Press sneak to get up early.
+- **Cloth** turns up in supply crates, closets and garages. 6 cloth (2 columns of 3) at a crafting table makes a **sleeping bag**. 3 cloth on 3 planks makes a **bed**. Both can be painted with the roller, which changes the blanket colour.
+- **Flowers** grow in patches: rose, sunflower, blue orchid, violet, orange/white/pink tulip and cornflower. Each flower crafts into **2 dye**: red, yellow, light blue, purple, orange, white, pink, blue. Other dyes: cactus = 2 green, coal = black, dirt = brown.
+- **Buckets:** 3 iron ingots in a V. Right-click water to fill it. Big water (rivers, lakes, ponds of about 4x4+) flows back into the hole, like Minecraft's infinite water. Right-click the ground with a water bucket to pour it out.
+- **Making paint:** water bucket in the middle of a crafting table, 8 dye of one colour around it = a **paint bucket** (32 blocks of paint, 4 per dip). New colours: light blue, orange, pink. An emptied paint bucket gives you the empty bucket back.
+- **Roller:** the roller head turns the paint colour when you dip it and fades back to white as the paint runs out. Right-click water with it to wash it clean.
+- **Doors:** the handle is now always on the side away from the hinges. The inside is mirrored, so it's on the left from inside.
+- New textures come from `tools/make_v09_textures.py`.
+
+## v0.8 notes: stealth, gore, smashing cars, blocks that face you
+- **Speed is in mph.** Over **20 mph** your car crashes straight through glass. Near **top speed** it smashes through walls: brick, concrete, siding, drywall, furniture, doors. It never goes through the ground, stone or trees. Smashing slows you down, dents the car and is loud. Tweak `glassSmashMph` / `wallSmashAt` in `js/core.js`.
+- **Road lines on east-west roads** now run along the road instead of across it.
+- **Blocks face you** like Minecraft: stoves, fridges, TVs, crafting tables and wardrobes turn their front toward you. Logs and hay bales lie on their side when you place them against the side of a block.
+- **Stealth:** zombies need a clear line of sight to see you now, even when you're holding a torch. Walls, floors and shut doors hide you. Getting upstairs out of sight really works.
+  - Stand behind cover that's **2 blocks high** and **hold Shift (sneak)**. A purple **STEALTH** tag shows next to the hunter counter and their awareness bar drains.
+  - Hiding without sneaking drains it much more slowly.
+  - Walking near them on the same floor (not sneaking) lets them **hear** you. An amber **THEY HEAR YOU** tag shows.
+  - Settings: `hideDrain`, `hearRange` in `js/core.js`.
+- **Gore:** zombies bleed red pixel blood when hit. When they die they fall apart: head, arms, legs and body fly off and bounce. Blood **stains** the ground (grass, floors, roads…) under zombies and under you when you get hurt. Stains fade after 10 seconds (`bloodStainTime`).
+
+## v0.7 notes: doors, paint, roofs, garages, falling trees
+- **Torches** stick to the wall you click and lean out from it, like Minecraft. On the floor they're a little stick. Break the block holding a torch and the torch drops.
+- **Your hand** stands up more (about 100° instead of 60°).
+- **Oak doors** (6 planks in 2 columns at a crafting table = 3 doors). Place one in a doorway (2 blocks tall). Right-click to open and shut it. Sneak + right-click places blocks against it instead. **Zombies know how to open doors.** They fiddle with the handle for a second, then walk in. They can't see you through a shut door, though.
+- **Paint:** find **Paint Buckets** (red, blue, green, yellow, white, black, brown, purple) in garages and supply crates. Make a **Paint Roller** from 2 wheat on top of a stick. Place a bucket, right-click it with the roller to dip it (each dip uses 1/8 of the bucket), then right-click siding, concrete, brick, drywall, doors, stairs or wooden furniture to paint it. One dip paints 16 blocks. Hold right-click to keep rolling. Break a bucket to pick it back up with its paint.
+- **Oak Stairs** (6 planks in a staircase shape = 4) and **Asphalt Shingles** (coal + cobblestone = 4 black roofing stairs). Like Minecraft, stairs go up away from you.
+- **Houses** in new worlds have black asphalt-shingle stair roofs and real doors. **Half of them have a garage with a concrete driveway.** Garages often have a supply crate and a paint bucket in the back.
+- **Cars are 10x rarer** on the roads.
+- **Car HUD:** one gas gauge with its percentage. The four little bars next to it are your tires. They turn amber when a tire is worn and red when it's flat or missing.
+- **Crafting Totem:** 8 planks in a ring with cobblestone in the middle, at a crafting table. While it's in your inventory, pressing E gives you a 3x3 crafting grid anywhere.
+- **Falling trees:** chop a log and everything above it (logs + leaves) tips over away from you and crashes down. You get all the logs, plus sticks and sometimes apples. The log below the cut stays as a stump.
+- Old worlds keep their old towns. New houses, garages and roofs show up in worlds you create with v0.7. Every world gets the new blocks, doors, paint and falling trees.
+- New textures come from `tools/make_v07_textures.py`, or you can paint over the PNGs.
 
 ## v0.6 notes: Creative Realm, your own buildings, controls, tires
 ### Designing building interiors (houses, hospitals, stores…)
