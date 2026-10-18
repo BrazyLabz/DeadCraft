@@ -391,6 +391,15 @@ body.in-car #itemName { display: none; }
 #carHp.bad em { color: var(--ui-danger); }
 #carInfo:empty { display: none; }
 
+/* v0.12 options: hunger style, colours, skin */
+.optrow { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.optrow .lbl { flex: 1; margin: 0; }
+.optrow select { font: inherit; font-size: 15px; color: var(--ui-text); background: var(--ui-button); border: 1px solid var(--ui-button-border); border-radius: var(--ui-radius-sm); padding: 7px 10px; }
+.optrow input[type=color] { width: 44px; height: 36px; border: 1px solid var(--ui-button-border); border-radius: 8px; background: none; padding: 2px; cursor: pointer; }
+.optrow .btn.sm { width: auto; min-height: 36px; margin: 0; padding: 0 12px; font-size: 14px; }
+#hunger .hbar { width: 200px; max-width: 40vw; height: 12px; margin: 4px 0 0 auto; border-radius: 99px; background: var(--ui-heart-empty); overflow: hidden; box-shadow: 0 0 0 2px #000; }
+#hunger .hbar i { display: block; height: 100%; border-radius: 99px; transition: width .3s; }
+
 </style>
 </head>
 <body>
@@ -467,6 +476,10 @@ body.in-car #itemName { display: none; }
   <div class="slider"><label class="lbl">Resolution <span class="v" id="oScaleV"></span></label><input type="range" id="oScale" min="0.5" max="1" step="0.05"></div>
   <button class="btn" id="oShaders">Shaders</button>
   <button class="btn" id="oGlow">Item glow</button>
+  <div class="optrow"><label class="lbl">Hunger</label><select id="oHunger"><option value="apple">Red apples</option><option value="orange">Oranges</option><option value="watermelon">Watermelon</option><option value="bar">Bar</option></select><input type="color" id="oHungerColor" title="Bar colour"></div>
+  <div class="optrow"><label class="lbl">Heart colour</label><input type="color" id="oHeartColor"><button class="btn sm" id="oColorsReset">Reset colours</button></div>
+  <div class="optrow"><label class="lbl">Your skin</label><button class="btn sm" id="oSkin">Upload skin…</button><button class="btn sm" id="oSkinReset">Default skin</button><input type="file" id="oSkinFile" accept="image/png,image/*" hidden></div>
+  <p class="modeinfo" id="oSkinInfo" style="margin:2px 0 6px">Any Minecraft skin PNG (64×64 or the old 64×32).</p>
   <button class="btn" id="bControls">Controls…</button>
   <button class="btn" id="bOptDone">Done</button>
 </div></div>
@@ -529,7 +542,7 @@ body.in-car #itemName { display: none; }
    ===================================================================== */
 'use strict';
 const DC = window.DC = {
-  version: '0.11.0',
+  version: '0.12.0',
   // ---- tweak these freely ----
   config: {
     worldHeight: 352,      // total build height (y 0..351)
@@ -552,6 +565,9 @@ const DC = window.DC = {
     wallSmashAt: 0.85,     // …and through walls above this much of their top speed      // chance of an abandoned car per road chunk (0.16 = the old, busy roads)
     allowBuilding: true,   // v0.11: build with anything, anywhere (false = only barricades/torches/ladders/tables)
     itemGlow: true,        // red glow around dropped items (Options → Item glow)
+    hungerStyle: 'apple',  // hunger icons: 'apple', 'orange', 'watermelon' or 'bar' (Options)
+    hungerColor: '#e8333a',// bar colour when hungerStyle = 'bar'
+    heartColor: '#ff375f',  // heart colour (Options)
     keepInventory: true,
     fov: 75,
     mouseSensitivity: 1.0,
@@ -971,6 +987,16 @@ for (const ax of ['x', 'z']) {
   }
 }
 
+/* ---------------- removed blocks ----------------
+   The old block-style wrecked cars and their "car window" blocks are gone: they're hidden from the
+   Creative menu / inventory, and any left in your worlds or saved buildings turn into air.
+   (They stay in this list so old saves keep the right block numbers.) */
+DC.REMOVED = ['car_red', 'car_blue', 'car_white', 'car_window'];
+for (const n of DC.REMOVED) {
+  DC.registerBlock({ name: n, removed: true });
+  const it = DC.itemByName[n]; if (it) { DC.items.splice(DC.items.indexOf(it), 1); delete DC.itemByName[n]; }
+}
+
 </script>
 <script>/* js/data/items.js */
 /* =====================================================================
@@ -1239,13 +1265,15 @@ DC.structures = {
   newId(name) { return String(name || 'building').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 24) + '_' + Date.now().toString(36); },
 
   /* ---------- encode / decode ---------- */
-  // ids: Uint8Array of block ids in (y * sz + z) * sx + x order
-  encode(sx, sy, sz, ids) {
-    const palette = ['air'], map = new Map([[0, 0]]), rle = [];
+  // ids: Uint8Array of block ids in (y * sz + z) * sx + x order. metas (optional, v0.12): extra block data
+  // (paint colour, facing, gate setup) — saved in the palette as "name:data", e.g. "concrete:5" = white concrete
+  encode(sx, sy, sz, ids, metas) {
+    const palette = ['air'], map = new Map([['0', 0]]), rle = [];
     let run = 0, cur = -1;
     for (let i = 0; i < ids.length; i++) {
-      let p = map.get(ids[i]);
-      if (p === undefined) { p = palette.length; palette.push(DC.blocks[ids[i]].name); map.set(ids[i], p); }
+      const m = metas ? metas[i] : 0, key = ids[i] + (m ? ':' + m : '');
+      let p = map.get(key);
+      if (p === undefined) { p = palette.length; palette.push(DC.blocks[ids[i]].name + (m ? ':' + m : '')); map.set(key, p); }
       if (p === cur) run++; else { if (run) rle.push(run, cur); cur = p; run = 1; }
     }
     if (run) rle.push(run, cur);
@@ -1254,41 +1282,56 @@ DC.structures = {
   decode(st) {
     const key = st.id + '|' + (st.rev || 0); let d = this._cache.get(key); if (d) return d;
     const [sx, sy, sz] = st.size, ids = new Uint8Array(sx * sy * sz);
-    const pal = st.palette.map(n => n === 'air' ? 0 : (DC.blockByName[n] ?? DC.blockByName.oak_planks));
-    let k = 0; for (let i = 0; i < st.rle.length; i += 2) { const n = st.rle[i], id = pal[st.rle[i + 1]] || 0; ids.fill(id, k, k + n); k += n; }
-    d = { sx, sy, sz, ids, rots: [] }; d.rots[0] = d; this._cache.set(key, d); return d;
+    const split = st.palette.map(e => { const [n, m] = String(e).split(':'); return [n, +m || 0]; });
+    const pal = split.map(([n]) => n === 'air' || (DC.REMOVED || []).includes(n) ? 0 : (DC.blockByName[n] ?? DC.blockByName.oak_planks));   // removed blocks -> air
+    const anyMeta = split.some(e => e[1]), metas = anyMeta ? new Uint8Array(ids.length) : null;
+    let k = 0; for (let i = 0; i < st.rle.length; i += 2) { const n = st.rle[i], p = st.rle[i + 1], id = pal[p] || 0; ids.fill(id, k, k + n); if (metas && id) metas.fill(split[p][1], k, k + n); k += n; }
+    d = { sx, sy, sz, ids, metas, rots: [] }; d.rots[0] = d; this._cache.set(key, d); return d;
   },
   /* rotate a decoded structure by rot * 90° clockwise (seen from above). Stairs & ladders turn with it. */
   rotated(st, rot) {
     const d = this.decode(st); rot = DC.mod(rot | 0, 4); if (d.rots[rot]) return d.rots[rot];
-    const p = this.rotated(st, rot - 1), { sx, sy, sz, ids } = p, out = new Uint8Array(ids.length), turn = this.turnTable(1);
+    const p = this.rotated(st, rot - 1), { sx, sy, sz, ids, metas } = p, out = new Uint8Array(ids.length), turn = this.turnTable(1), mo = metas ? new Uint8Array(ids.length) : null;
     // one more 90° turn: new x = (sz - 1 - z), new z = x
-    for (let y = 0; y < sy; y++) for (let z = 0; z < sz; z++) for (let x = 0; x < sx; x++)
-      out[(y * sx + x) * sz + (sz - 1 - z)] = turn[ids[(y * sz + z) * sx + x]];
-    return (d.rots[rot] = { sx: sz, sy, sz: sx, ids: out });
+    for (let y = 0; y < sy; y++) for (let z = 0; z < sz; z++) for (let x = 0; x < sx; x++) {
+      const i = (y * sz + z) * sx + x, o = (y * sx + x) * sz + (sz - 1 - z);
+      out[o] = turn[ids[i]]; if (mo) mo[o] = this.turnMeta(ids[i], metas[i]);
+    }
+    return (d.rots[rot] = { sx: sz, sy, sz: sx, ids: out, metas: mo });
   },
   turnTable(rot) {
     this._turn = this._turn || []; if (this._turn[rot]) return this._turn[rot];
     const t = new Uint8Array(256); for (let i = 0; i < 256; i++) t[i] = i;
     const order = ['north', 'east', 'south', 'west'];
     for (const b of DC.blocks) if (b) {
+      const xz = /^(.*)_(x|z)$/.exec(b.name);   // fences & gates: _x <-> _z
+      if (xz && rot % 2 && b.multi) { const to = xz[1] + '_' + (xz[2] === 'x' ? 'z' : 'x'); if (DC.blockByName[to] != null) t[b.id] = DC.blockByName[to]; continue; }
       const m = /^(.*)_(north|east|south|west)$/.exec(b.name); if (!m) continue;
       const to = m[1] + '_' + order[(order.indexOf(m[2]) + rot) % 4]; if (DC.blockByName[to] != null) t[b.id] = DC.blockByName[to];
     }
     return (this._turn[rot] = t);
+  },
+  // block data after a 90° turn: facing turns, logs swap axis, fences/gates along z flip their order
+  turnMeta(id, m) {
+    const def = DC.blocks[id]; if (!def || !m) return m;
+    if (def.multi && (m & 32)) { if (def.axis === 'z') { const len = def.gate ? def.gateLen : 2; m = (m & ~3) | (len - 1 - (m & 3)); m ^= 16; } return m; }
+    if (def.logAxis) { const a = (m >> 6) & 3; return (m & 63) | ((a === 1 ? 2 : a === 2 ? 1 : 0) << 6); }
+    if (def.shape === 'cube' && ((m >> 4) & 3) !== undefined) return (m & ~48) | ((((m >> 4) & 3) + 1) & 3) << 4;
+    return m;
   },
   turnFront(front, rot) { return DC.mod((front | 0) + rot, 4); },
 
   /* ---------- capture from the world (Creative: Building Wand selection) ---------- */
   capture(world, a, b) {
     const x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y), z0 = Math.min(a.z, b.z), x1 = Math.max(a.x, b.x), y1 = Math.max(a.y, b.y), z1 = Math.max(a.z, b.z);
-    const sx = x1 - x0 + 1, sy = y1 - y0 + 1, sz = z1 - z0 + 1, ids = new Uint8Array(sx * sy * sz);
+    const sx = x1 - x0 + 1, sy = y1 - y0 + 1, sz = z1 - z0 + 1, ids = new Uint8Array(sx * sy * sz), metas = new Uint8Array(sx * sy * sz);
     for (let y = 0; y < sy; y++) for (let z = 0; z < sz; z++) for (let x = 0; x < sx; x++) {
       let id = world.getBlock(x0 + x, y0 + y, z0 + z); const def = DC.blocks[id];
       if (def && (def.name === 'water' || def.name === 'tall_grass')) id = 0;
-      ids[(y * sz + z) * sx + x] = id;
+      if (def && def.gateOpen) id = DC.blockByName[def.name.replace('_open', '')];   // save gates shut
+      ids[(y * sz + z) * sx + x] = id; if (id) metas[(y * sz + z) * sx + x] = world.getMeta(x0 + x, y0 + y, z0 + z);   // paint, facing, gates…
     }
-    return this.encode(sx, sy, sz, ids);
+    return this.encode(sx, sy, sz, ids, metas);
   },
   /* ---------- paste into a loaded world, fast (one relight per chunk) ---------- */
   place(world, st, ox, oy, oz, rot, clearAir = true) {
@@ -1297,12 +1340,14 @@ DC.structures = {
       const wy = oy + y; if (wy <= 0 || wy >= H) continue;
       for (let z = 0; z < d.sz; z++) for (let x = 0; x < d.sx; x++) {
         const id = d.ids[(y * d.sz + z) * d.sx + x]; if (!id && (!clearAir || y === 0)) continue;   // empty bottom layer keeps the ground
+        const mt = d.metas ? d.metas[(y * d.sz + z) * d.sx + x] : 0;
         const wx = ox + x, wz = oz + z, cx = Math.floor(wx / 16), cz = Math.floor(wz / 16);
         const ch = world.getChunk(cx, cz) || world.loadChunk(cx, cz);
         const lx = wx - cx * 16, lz = wz - cz * 16, i = (wy * 16 + lz) * 16 + lx, old = ch.data[i];
-        if (old === id) continue;
+        if (old === id && (ch.meta.get(i) || 0) === mt) continue;
         ch.data[i] = id; (world.diffs[ch.key] = world.diffs[ch.key] || {})[i] = id; world.dirtyDiffs.add(ch.key);
-        if (ch.meta && ch.meta.has(i)) { ch.meta.delete(i); world.diffs[ch.key]['m' + i] = 0; }
+        if (mt) { ch.meta.set(i, mt); world.diffs[ch.key]['m' + i] = mt; }
+        else if (ch.meta && ch.meta.has(i)) { ch.meta.delete(i); world.diffs[ch.key]['m' + i] = 0; }
         if (world.lightLvl[old]) ch.lights.delete(i); if (world.lightLvl[id]) ch.lights.add(i);
         touched.add(ch);
       }
@@ -1316,6 +1361,12 @@ DC.structures = {
     for (const ch of [...touched, ...nb]) {
       if (ch.light) world.computeLight(ch, false);
       for (let s = s0; s <= s1; s++) { if (ch.meshed[s]) world.dirty(ch, s); }
+    }
+    // sliding gates in the building start working right away
+    if (d.metas && DC.gates) for (let i = 0; i < d.ids.length; i++) {
+      const m = d.metas[i], def = DC.blocks[d.ids[i]]; if (!def || !def.gate || !(m & 32) || (m & 7)) continue;
+      const x = i % d.sx, z = Math.floor(i / d.sx) % d.sz, y = Math.floor(i / (d.sx * d.sz));
+      DC.gates.register(world, ox + x, oy + y, oz + z);
     }
     return d;
   },
@@ -1349,13 +1400,13 @@ DC.structures.load();
      DC.structures.defaults.push(b.done({ id, name, category, weight, front }));
    --------------------------------------------------------------------- */
 DC.StructBuilder = class {
-  constructor(sx, sy, sz) { this.sx = sx; this.sy = sy; this.sz = sz; this.ids = new Uint8Array(sx * sy * sz); }
+  constructor(sx, sy, sz) { this.sx = sx; this.sy = sy; this.sz = sz; this.ids = new Uint8Array(sx * sy * sz); this.metas = new Uint8Array(sx * sy * sz); }
   id(b) { if (!b) return 0; if (typeof b === 'number') return b; const v = DC.blockByName[b]; if (v == null) { console.warn('[buildings] unknown block', b); return 0; } return v; }
-  set(x, y, z, b) { if (x < 0 || y < 0 || z < 0 || x >= this.sx || y >= this.sy || z >= this.sz) return this; this.ids[(y * this.sz + z) * this.sx + x] = this.id(b); return this; }
+  set(x, y, z, b, meta = 0) { if (x < 0 || y < 0 || z < 0 || x >= this.sx || y >= this.sy || z >= this.sz) return this; const i = (y * this.sz + z) * this.sx + x; this.ids[i] = this.id(b); this.metas[i] = meta; return this; }
   get(x, y, z) { return this.ids[(y * this.sz + z) * this.sx + x]; }
-  fill(x0, y0, z0, x1, y1, z1, b) {
+  fill(x0, y0, z0, x1, y1, z1, b, meta = 0) {
     const id = this.id(b);
-    for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) for (let z = Math.min(z0, z1); z <= Math.max(z0, z1); z++) for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) this.set(x, y, z, id);
+    for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) for (let z = Math.min(z0, z1); z <= Math.max(z0, z1); z++) for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) this.set(x, y, z, id, meta);
     return this;
   }
   clear(x0, y0, z0, x1, y1, z1) { return this.fill(x0, y0, z0, x1, y1, z1, 0); }
@@ -1394,13 +1445,22 @@ DC.StructBuilder = class {
     }
     return this;
   }
-  done(meta) { return Object.assign({ weight: 5, front: 0, builtin: true, rev: 1 }, meta, DC.structures.encode(this.sx, this.sy, this.sz, this.ids)); }
+  // v0.12: painted blocks (colour = 'white', 'red'… see DC.PAINTS)
+  paint(x0, y0, z0, x1, y1, z1, b, colour) { return this.fill(x0, y0, z0, x1, y1, z1, b, DC.paintIndex(colour)); }
+  // v0.12: a 2x2 wire fence piece / a sliding gate (axis 'x' or 'z', starting at the west/north end; flip = slides toward +x/+z)
+  fence(x, y, z, axis = 'x') { return this.multi('wire_fence_' + axis, x, y, z, axis, 2, false, false); }
+  gate(x, y, z, axis = 'x', large = true, flip = false) { return this.multi((large ? 'large_gate_' : 'iron_gate_') + axis, x, y, z, axis, large ? 4 : 2, large, flip); }
+  multi(name, x, y, z, axis, len, large, flip) {
+    for (let k = 0; k < len; k++) for (let row = 0; row < 2; row++) this.set(x + (axis === 'x' ? k : 0), y + row, z + (axis === 'z' ? k : 0), name, (k & 3) | (row ? 4 : 0) | (large ? 8 : 0) | (flip ? 16 : 0) | 32);
+    return this;
+  }
+  done(meta) { return Object.assign({ weight: 5, front: 0, builtin: true, rev: 1 }, meta, DC.structures.encode(this.sx, this.sy, this.sz, this.ids, this.metas)); }
 };
 
 </script>
 <script>/* js/data/buildings.js */
 /* =====================================================================
-   THE 10 DEFAULT BUILDINGS (v0.6)
+   THE DEFAULT BUILDINGS (v0.6, + 11 11s & the new gas station in v0.12)
    Built with code here so they're easy to tweak, but the easy way to change
    them is in the game: Creative Realm → Creative menu → Buildings → Edit.
    Your edited copy replaces the default (Restore defaults brings it back).
@@ -1513,8 +1573,15 @@ DC.StructBuilder = class {
 
   /* 7 ---------- Police Station (2 floors) ---------- */
   {
-    const b = B(20, 10, 16);
+    const b = B(20, 10, 22);
     for (const y of [0, 4]) b.fill(0, y, 0, 19, y, 15, 'tile_floor');
+    // v0.12: fenced parking lot out back, wire fence all round, a large sliding gate in the middle
+    b.fill(0, 0, 16, 19, 0, 21, 'asphalt');
+    for (const z of [16, 18, 20]) { b.fence(0, 1, z, 'z'); b.fence(19, 1, z, 'z'); }
+    for (const x of [1, 3, 5]) b.fence(x, 1, 21, 'x');
+    b.gate(7, 1, 21, 'x', true, false);        // slides west, over the fence
+    for (const x of [11, 13, 15, 17]) b.fence(x, 1, 21, 'x');
+    for (const x of [3, 7, 11, 15]) b.set(x, 0, 18, 'road_line_white').set(x, 0, 19, 'road_line_white');   // parking lines
     b.walls(0, 1, 0, 19, 7, 15, 'concrete');
     b.windows(0, 0, 19, 15, 2, 1, 3).windows(0, 0, 19, 15, 6, 1, 3).door(9, 1, 0, 2);
     b.fill(0, 8, 0, 19, 8, 15, 'concrete_dark').walls(0, 9, 0, 19, 9, 15, 'concrete');
@@ -1525,11 +1592,12 @@ DC.StructBuilder = class {
     for (const x0 of [8, 12, 16]) { b.fill(x0, 1, 9, x0, 3, 14, 'concrete'); b.fill(x0 + 1, 1, 9, x0 + 3, 3, 9, 'glass').door(x0 + 2, 1, 9); b.set(x0 + 3, 1, 14, 'sleeping_bag_foot_south'); }
     b.clear(19, 1, 9, 19, 3, 14).walls(19, 1, 9, 19, 3, 14, 'concrete');
     b.set(5, 1, 13, 'supply_crate').set(6, 1, 13, 'supply_crate').set(5, 1, 10, 'filing_cabinet');
+    b.oakDoor(6, 1, 15, 'south');             // back door to the lot
     // upstairs: offices
     b.fill(1, 5, 7, 18, 7, 7, 'drywall').door(5, 5, 7).door(14, 5, 7).fill(9, 5, 1, 9, 7, 6, 'drywall').door(9, 5, 4).fill(9, 5, 8, 9, 7, 14, 'drywall').door(9, 5, 11);
     for (const [x, z] of [[3, 2], [6, 2], [12, 2], [16, 2], [12, 11], [16, 11]]) b.set(x, 5, z, 'office_desk').set(x, 5, z + 1, 'filing_cabinet');
     b.set(5, 5, 12, 'bookshelf').set(7, 5, 12, 'supply_crate').set(1, 5, 1, 'supply_crate');
-    add(b, { id: 'default_police_station', name: 'Police Station', category: 'office', weight: 5, front: 0 });
+    add(b, { id: 'default_police_station', rev: 2, name: 'Police Station', category: 'office', weight: 5, front: 0 });
   }
 
   /* 8 ---------- Apartment Block (4 floors) ---------- */
@@ -1589,20 +1657,51 @@ DC.StructBuilder = class {
     add(b, { id: 'default_hospital', name: 'Hospital', category: 'hospital', weight: 5, front: 0 });
   }
 
-  /* 10 ---------- Gas Station ---------- */
+  /* 10 ---------- Gas Station (v0.12: big canopy like a real one) ----------
+     Painted concrete: white walls/pillars, then a red stripe, a purple stripe and white on top. */
   {
-    const b = B(20, 7, 18);
-    b.fill(0, 0, 0, 19, 0, 17, 'asphalt');
-    for (const x of [1, 5, 9, 13, 17]) b.set(x, 0, 2, 'road_line_white').set(x + 1, 0, 2, 'road_line_white').set(x, 0, 8, 'road_line_white').set(x + 1, 0, 8, 'road_line_white');
-    for (const [x, z] of [[2, 2], [17, 2], [2, 8], [17, 8]]) b.fill(x, 1, z, x, 4, z, 'concrete');
-    b.fill(1, 5, 1, 18, 5, 9, 'concrete');
-    for (const x of [6, 10, 14]) b.set(x, 1, 5, 'gas_pump').set(x, 2, 5, 'gas_pump_upper');
+    const b = B(20, 8, 20), W = 'white';
+    b.fill(0, 0, 0, 19, 0, 19, 'asphalt');
+    // pump islands with our 2-tall pumps
+    for (const x of [5, 9, 13]) { b.fill(x - 1, 0, 4, x + 1, 0, 6, 'concrete'); b.set(x, 1, 5, 'gas_pump').set(x, 2, 5, 'gas_pump_upper'); }
+    for (const x of [1, 18]) b.set(x, 0, 2, 'road_line_white').set(x, 0, 8, 'road_line_white');
+    // canopy: white pillars, then red / purple / white bands all the way round
+    for (const [x, z] of [[2, 2], [17, 2], [2, 8], [17, 8], [9, 2], [9, 8]]) b.paint(x, 1, z, x, 3, z, 'concrete', W);
+    b.paint(1, 4, 1, 18, 6, 9, 'concrete', W);
+    b.paint(1, 4, 1, 18, 4, 1, 'concrete', 'red').paint(1, 4, 9, 18, 4, 9, 'concrete', 'red').paint(1, 4, 1, 1, 4, 9, 'concrete', 'red').paint(18, 4, 1, 18, 4, 9, 'concrete', 'red');
+    b.paint(1, 5, 1, 18, 5, 1, 'concrete', 'purple').paint(1, 5, 9, 18, 5, 9, 'concrete', 'purple').paint(1, 5, 1, 1, 5, 9, 'concrete', 'purple').paint(18, 5, 1, 18, 5, 9, 'concrete', 'purple');
     // the shop
-    b.fill(4, 0, 11, 15, 0, 17, 'tile_floor').walls(4, 1, 11, 15, 3, 17, 'brick').fill(4, 4, 11, 15, 4, 17, 'concrete_dark');
-    b.fill(5, 2, 11, 14, 2, 11, 'glass').door(9, 1, 11, 2);
-    b.set(7, 1, 13, 'store_shelf').set(7, 1, 14, 'store_shelf').set(12, 1, 13, 'store_shelf').set(12, 1, 14, 'store_shelf');
-    b.fill(5, 1, 16, 7, 1, 16, 'kitchen_counter').set(6, 1, 16, 'cash_register').set(14, 1, 16, 'fridge').set(13, 1, 16, 'fridge').set(10, 1, 16, 'supply_crate');
-    add(b, { id: 'default_gas_station', rev: 2, name: 'Gas Station', category: 'gas_station', weight: 5, front: 0 });
+    b.fill(3, 0, 12, 16, 0, 18, 'tile_floor');
+    b.walls(3, 1, 12, 16, 3, 18, 'concrete').paint(3, 1, 12, 16, 3, 18, 'concrete', W).fill(4, 1, 13, 15, 3, 17, 0);
+    b.fill(4, 1, 12, 15, 2, 12, 'glass').oakDoor(9, 1, 12, 'south').oakDoor(10, 1, 12, 'south');
+    b.paint(3, 4, 12, 16, 4, 18, 'concrete', 'red').paint(3, 5, 12, 16, 5, 18, 'concrete', 'purple').paint(3, 6, 12, 16, 6, 18, 'concrete', W);
+    b.paint(4, 4, 13, 15, 6, 17, 'concrete', W).fill(4, 4, 13, 15, 5, 17, 0).paint(4, 6, 13, 15, 6, 17, 'concrete', W);   // ceiling
+    b.set(6, 1, 14, 'store_shelf').set(6, 1, 15, 'store_shelf').set(13, 1, 14, 'store_shelf').set(13, 1, 15, 'store_shelf');
+    b.fill(4, 1, 17, 6, 1, 17, 'kitchen_counter').set(5, 1, 17, 'cash_register').set(15, 1, 17, 'fridge').set(14, 1, 17, 'fridge').set(10, 1, 17, 'supply_crate').set(4, 1, 13, 'table');
+    add(b, { id: 'default_gas_station', rev: 3, name: 'Gas Station', category: 'gas_station', weight: 5, front: 0 });
+  }
+
+  /* 11 ---------- 11 11s (corner convenience store, v0.12) ----------
+     Brick walls, glass front, a white sign band with orange / green / red stripes and a red "11" logo. */
+  {
+    const b = B(18, 8, 13);
+    b.fill(0, 0, 0, 17, 0, 12, 'tile_floor').walls(0, 1, 0, 17, 3, 12, 'brick');
+    for (const x of [0, 5, 6, 11, 12, 17]) b.fill(x, 1, 0, x, 3, 0, 'brick');
+    b.fill(1, 1, 0, 4, 3, 0, 'glass').fill(13, 1, 0, 16, 3, 0, 'glass').fill(7, 3, 0, 10, 3, 0, 'glass');
+    b.oakDoor(8, 1, 0, 'south').oakDoor(9, 1, 0, 'south'); b.paint(7, 1, 0, 7, 2, 0, 'concrete', 'white').paint(10, 1, 0, 10, 2, 0, 'concrete', 'white');
+    // sign band: stripes along the front and around the corners
+    const band = (y, c) => { b.paint(0, y, 0, 17, y, 0, 'concrete', c); b.paint(0, y, 1, 0, y, 3, 'concrete', c); b.paint(17, y, 1, 17, y, 3, 'concrete', c); };
+    band(7, 'orange'); band(6, 'green'); band(5, 'red'); band(4, 'white');   // orange / green / red stripes, top to bottom
+    // the logo panel: white with a big red "11"
+    b.paint(5, 4, 0, 12, 7, 0, 'concrete', 'white');
+    for (const x of [7, 10]) b.paint(x, 4, 0, x, 7, 0, 'concrete', 'red');            // the 1s
+    b.paint(8, 6, 0, 8, 6, 0, 'concrete', 'red').paint(11, 6, 0, 11, 6, 0, 'concrete', 'red');   // their little flags (on the left, seen from the street)
+    b.fill(1, 4, 1, 16, 4, 12, 'concrete_dark').walls(0, 4, 4, 17, 4, 12, 'brick');
+    // inside: aisles, coffee, drinks, counter
+    for (const x of [4, 8, 12]) b.fill(x, 1, 4, x, 2, 8, 'store_shelf');
+    b.fill(1, 1, 11, 16, 1, 11, 'fridge').fill(1, 1, 2, 3, 1, 2, 'kitchen_counter').set(2, 1, 2, 'cash_register');
+    b.set(16, 1, 2, 'stove').set(15, 1, 2, 'kitchen_counter').set(16, 1, 6, 'supply_crate').set(1, 1, 7, 'supply_crate');
+    add(b, { id: 'default_eleven_elevens', rev: 3, name: '11 11s', category: 'store', weight: 6, front: 0 });
   }
 })();
 
@@ -1730,7 +1829,8 @@ DC.WorldGen = class {
   generateChunk(cx, cz) {
     if (this.flat) return this.flatChunk(cx, cz);
     const S = 16, H = this.H, ID = this.ID, data = new Uint8Array(S * S * H);
-    const set = (x, y, z, b) => { if (y > 0 && y < H) data[(y * S + z) * S + x] = b; };
+    const meta = new Map();   // v0.12: extra block data from buildings (paint colours, gates…)
+    const set = (x, y, z, b, m) => { if (y > 0 && y < H) { const i = (y * S + z) * S + x; data[i] = b; if (m) meta.set(i, m); else if (meta.size) meta.delete(i); } };
     const get = (x, y, z) => data[(y * S + z) * S + x];
     const cols = new Array(S * S);
     const ox = cx * S, oz = cz * S;
@@ -1761,13 +1861,13 @@ DC.WorldGen = class {
     // ---- structures, roads ----
     for (let z = 0; z < S; z++) for (let x = 0; x < S; x++) {
       const c = cols[z * S + x], wx = ox + x, wz = oz + z;
-      if (c.urban === 'city') this.cityColumn(c, wx, wz, (y, b) => set(x, y, z, b));
-      else if (c.urban === 'town') this.townColumn(c, wx, wz, (y, b) => set(x, y, z, b));
+      if (c.urban === 'city') this.cityColumn(c, wx, wz, (y, b, m) => set(x, y, z, b, m));
+      else if (c.urban === 'town') this.townColumn(c, wx, wz, (y, b, m) => set(x, y, z, b, m));
       else if (c.road.dist <= 6.5) this.roadColumn(c, wx, wz, (y, b) => set(x, y, z, b));
     }
 
     this.decorate(data, cols, cx, cz, set, get);
-    const chunk = { cx, cz, data, cols };
+    const chunk = { cx, cz, data, cols, meta };
     DC.emit('generateChunk', chunk, this);
     return chunk;
   }
@@ -1936,7 +2036,7 @@ DC.WorldGen = class {
     put(G, ground);
     if (ix < 0 || iz < 0 || ix >= d.sx || iz >= d.sz) return;
     const base = iz * d.sx + ix, layer = d.sx * d.sz;
-    for (let y = 0; y < d.sy; y++) { const b = d.ids[y * layer + base]; if (b) put(G + y, b); }
+    for (let y = 0; y < d.sy; y++) { const b = d.ids[y * layer + base]; if (b) put(G + y, b, d.metas ? d.metas[y * layer + base] : 0); }
   }
   /* ---------------- hospital (you wake up here) ---------------- */
   hospitalTpl() {
@@ -2249,6 +2349,9 @@ DC.World = class {
     if (g.meta) for (const [i, v] of g.meta) ch.meta.set(i, v);
     // saved edits: "123": block id, "m123": extra data for that block (paint colour, paint left in a bucket…)
     const d = this.diffs[k]; if (d) for (const i in d) { if (i[0] === 'm') { if (d[i]) ch.meta.set(+i.slice(1), d[i]); else ch.meta.delete(+i.slice(1)); } else ch.data[+i] = d[i]; }
+    // removed blocks (old wrecked-car blocks) left in this chunk become air, for good
+    const rm = this.removedIds || (this.removedIds = new Uint8Array(256).map((_, i) => DC.blocks[i] && DC.blocks[i].removed ? 1 : 0));
+    for (let i = 0; i < ch.data.length; i++) if (rm[ch.data[i]]) { ch.data[i] = 0; (this.diffs[k] = this.diffs[k] || {})[i] = 0; this.dirtyDiffs.add(k); }
     for (let z = 0; z < 16; z++) for (let x = 0; x < 16; x++) this.computeHM(ch, x, z);
     for (let i = 0; i < ch.data.length; i++) if (this.lightLvl[ch.data[i]]) ch.lights.add(i);
     this.chunks.set(k, ch);
@@ -3424,13 +3527,16 @@ DC.Player = class {
     if (this.health <= 0) this.die();
   }
   die() {
+    if (this.vehicle) this.game.vehicles.exit(this.vehicle);   // you fall out of the car (so you respawn at your spawn point, not in it)
+    if (this.sleep) this.wake(null);
     this.dead = true; this.mining = null;
     if (!DC.config.keepInventory) { for (const s of this.inv.slots) if (s) this.game.drops.spawn(s.id, s.n, this.pos.x, this.pos.y + 1, this.pos.z, null, s.d); this.inv.slots.fill(null); }
     this.game.zombies.calmAll();
     DC.emit('playerDeath', this); DC.ui.showDeath();
   }
   respawn() {
-    this.dead = false; this.health = 20; this.hunger = 20; this.exhaustion = 0; this.vel = { x: 0, y: 0, z: 0 };
+    if (this.vehicle) this.game.vehicles.exit(this.vehicle);
+    this.dead = false; this.health = 20; this.hunger = 20; this.exhaustion = 0; this.vel = { x: 0, y: 0, z: 0 }; this.viewY = null;
     Object.assign(this.pos, this.spawn); this.fallStart = null; DC.ui.hud();
   }
 
@@ -4163,9 +4269,10 @@ DC.ui = {
     const P = this.game.player; let h = '';
     for (let i = 0; i < 10; i++) { const v = P.health - i * 2; h += heartSVG(v >= 2 ? 2 : v >= 1 ? 1 : 0); }
     this.els.hearts.innerHTML = h; this.els.hearts.classList.toggle('low', P.health <= 6);
-    let f = '';
-    for (let i = 9; i >= 0; i--) { const v = P.hunger - i * 2; f += foodSVG(v >= 2 ? 2 : v >= 1 ? 1 : 0); }
-    this.els.hunger.innerHTML = f; this.els.hunger.classList.toggle('low', P.hunger <= 6);
+    const st = DC.config.hungerStyle || 'apple';
+    if (st === 'bar') this.els.hunger.innerHTML = `<div class="hbar"><i style="width:${P.hunger / 20 * 100}%;background:${DC.config.hungerColor || '#e8333a'}"></i></div>`;
+    else { let f = ''; for (let i = 9; i >= 0; i--) { const v = P.hunger - i * 2; f += foodSVG(v >= 2 ? 2 : v >= 1 ? 1 : 0, st); } this.els.hunger.innerHTML = f; }
+    this.els.hunger.classList.toggle('low', P.hunger <= 6);
   },
   /* hunters counter + 'losing track' bar: drains while no hunting zombie can see you */
   huntHUD(g) {
@@ -4367,7 +4474,24 @@ function heartSVG(state) {
   return `<svg viewBox="0 0 9 9" shape-rendering="crispEdges">${r}</svg>`;
 }
 
-function foodSVG(state) {
+/* v0.12 hunger icons. X = black outline, F = the food (empty = grey), W = shine, s = stem, l = leaf, G/P = melon rind, B = seeds */
+const FOOD_ICONS = {
+  apple: { px: ['....s.ll.', '...s.ll..', '.XXXsXXX.', 'XFFFFFWFX', 'XFFFFFFWX', 'XFFFFFFFX', 'XFFFFFFFX', '.XFFFFFX.', '..XX.XX..'], col: '#e8333a' },
+  watermelon: { px: ['GGGGGGGGG', 'PPPPPPPPP', 'XFFBFFBFX', '.XFFFFFX.', '.XFBFFFX.', '..XFFFX..', '..XFFFX..', '...XFX...', '....X....'], col: '#f2434f' }
+};
+function foodSVG(state, style) {
+  const I = FOOD_ICONS[style];
+  if (I) {
+    let r = '';
+    I.px.forEach((row, y) => [...row].forEach((ch, x) => {
+      if (ch === '.') return;
+      const filled = state === 2 || (state === 1 && x >= 4);
+      const col = ch === 'X' ? '#000' : ch === 's' ? '#5a3a1a' : ch === 'l' ? '#3fa33a' : ch === 'G' ? (filled ? '#2f8a2c' : 'var(--ui-heart-empty)') : ch === 'P' ? (filled ? '#d8f0c0' : 'var(--ui-heart-empty)')
+        : ch === 'B' ? (filled ? '#111' : 'var(--ui-heart-empty)') : ch === 'W' ? (filled ? '#ffd0d0' : 'var(--ui-heart-empty)') : (filled ? I.col : 'var(--ui-heart-empty)');
+      r += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${col}"/>`;
+    }));
+    return `<svg viewBox="0 0 9 9" shape-rendering="crispEdges">${r}</svg>`;
+  }
   const px = ['......BB.', '.....BWWB', '....BBWB.', '..OOOBB..', '.OoOOO...', 'OoOOOOO..', 'OOOOOOO..', '.OOOOO...', '..OOO....'];
   let r = '';
   px.forEach((row, y) => [...row].forEach((ch, x) => {
@@ -4871,7 +4995,7 @@ DC.gates = {
   SLIDE_TIME: 1.1,   // seconds to slide open / shut
   list: new Map(),   // key "x,y,z" of the bottom-left block -> gate
   // meta bits for every block of a piece
-  meta(col, top, large, flip) { return (col & 3) | (top ? 4 : 0) | (large ? 8 : 0) | (flip ? 16 : 0); },
+  meta(col, top, large, flip) { return (col & 3) | (top ? 4 : 0) | (large ? 8 : 0) | (flip ? 16 : 0) | 32; },   // 32 = 'this is part of a piece'
   axisVec(ax) { return ax === 'x' ? [1, 0] : [0, 1]; },
 
   /* place a fence / gate piece. Called by the player. Returns true if placed. */
@@ -4992,8 +5116,14 @@ DC.on('blockChanged', (x, y, z, id, old) => {
     return;
   }
 });
-/* gates that were placed earlier come back when their chunk loads */
+/* gates that were placed earlier (or are part of a building, like the police station) come back when their chunk loads */
 DC.on('chunkLoaded', ch => {
+  const W0 = DC.game && DC.game.world;
+  for (const [i, m] of ch.meta) {
+    if (!(m & 32) || (m & 3) || (m & 4)) continue; const def = DC.blocks[ch.data[i]]; if (!def || !def.gate) continue;
+    const lx = i & 15, lz = (i >> 4) & 15, y = i >> 8;
+    setTimeout(() => { const W = DC.game && DC.game.world; if (W && (!W0 || W === W0 || W.chunks.get(ch.key) === ch)) DC.gates.register(W, ch.cx * 16 + lx, y, ch.cz * 16 + lz); }, 0);
+  }
   const W = DC.game && DC.game.world, d = W && W.diffs[ch.key]; if (!d) return;
   for (const i in d) {
     if (i[0] === 'm') continue; const def = DC.blocks[d[i]]; if (!def || !def.gate) continue;
@@ -5125,9 +5255,10 @@ DC.ViewModel = class {
       let x = A.x + bobX, y = A.y + bobY + eq, z = A.z, rx = A.rx, ry = A.ry, rz = A.rz;
       let ix = 0.36 + bobX, iy = -0.27 + bobY + eq, iz = -0.62, irx = 0, iry = 0;
       // right-click (place / use): a quick straight punch forward, like Minecraft — replaces the swing while it plays
-      const pu = P.placeT > 0 ? Math.sin((1 - P.placeT / 0.25) * Math.PI) : 0;
+      // v0.12: hitting (left-click) is the same punch, plus a little Minecraft-style arc across the screen
+      const pu = Math.max(P.placeT > 0 ? Math.sin((1 - P.placeT / 0.25) * Math.PI) : 0, sw), arc = sw > pu - 1e-6 && sw > 0 ? Math.sin((1 - P.swing) * Math.PI * 2) * 0.06 : 0;
+      x -= arc; ix -= arc;
       if (pu > 0) { z -= pu * 0.3; x -= pu * 0.16; y += pu * 0.1; rx += pu * 0.3; ry -= pu * 0.15; ix -= pu * 0.18; iy += pu * 0.06; iz -= pu * 0.32; irx = -pu * 0.35; iry = pu * 0.2; }
-      else if (sw) { rx += sw * 0.45; ry += sw * 0.3; x -= sw * 0.12; y += sw * 0.06; ix -= sw * 0.16; iy += sw * 0.03; iz -= sw * 0.06; irx = -sw * 1.0; iry = sw * 0.5; }
       if (eating) { const b = Math.sin(P.eatT * 18) * 0.02; x = 0.32; y = -0.5 + b; ry = 0.7; ix = 0.12; iy = -0.2 + b; iz = -0.5; }
       this.armR.position.set(x, y, z); this.armR.rotation.set(rx, ry, rz);
       this.itemR.visible = true; this.itemR.position.set(ix, iy, iz); this.itemR.rotation.set(irx, iry, 0);
@@ -5154,7 +5285,7 @@ DC.ViewModel = class {
 <script>/* js/data/vehicles.js */
 /* =====================================================================
    VEHICLES — stats and blocky models. Edit freely!
-   Units are blocks (1 block = 1 m). maxSpeed is blocks/second: x 2.237 = mph (38 = 85 mph). The car faces -Z (forward). Each box:
+   Units are blocks (1 block = 1 m). maxSpeed is blocks/second: x 2.237 = mph (22.4 = 50 mph). The car faces -Z (forward). Each box:
      [width, height, length,  x, y, z,  color,  options]
    y is the bottom of the box. options: { light: true } glows (headlights),
    { wheel: 'front'|'rear' } spins (front wheels also steer).
@@ -5169,7 +5300,7 @@ const WHEELS = (x, zf, zr, r = 0.33) => [
 const GLASS = 0x1d2a33, CHROME = 0x9a9ea3, HEAD = 0xfff2c4, TAIL = 0xd2141e;
 
 DC.registerVehicle('sedan', {
-  displayName: 'Sedan', w: 1.9, len: 4.3, h: 1.45, maxSpeed: 38, accel: 10, turn: 1.9, hp: 30, tank: 100, fuelUse: 0.55,
+  displayName: 'Sedan', w: 1.9, len: 4.3, h: 1.45, maxSpeed: 22.4, accel: 8, turn: 1.9, hp: 30, tank: 100, fuelUse: 0.55,
   paints: [0x8c1f1f, 0x1f3d7a, 0xc9c9c4, 0x2b2b2e, 0x3d5a3a, 0x6b6b70],
   boxes: [
     [1.9, 0.55, 4.3, 0, 0.3, 0, 'paint'],                       // body
@@ -5181,7 +5312,7 @@ DC.registerVehicle('sedan', {
     ...WHEELS(0.86, -1.35, 1.35)]
 });
 DC.registerVehicle('pickup', {
-  displayName: 'Pickup Truck', w: 2.0, len: 5.0, h: 1.75, maxSpeed: 33.5, accel: 9, turn: 1.7, hp: 38, tank: 120, fuelUse: 0.65,
+  displayName: 'Pickup Truck', w: 2.0, len: 5.0, h: 1.75, maxSpeed: 20.1, accel: 7.5, turn: 1.7, hp: 38, tank: 120, fuelUse: 0.65,
   paints: [0x5a1a14, 0x23313f, 0xb9b4a6, 0x37452b, 0x1c1c1e],
   boxes: [
     [2.0, 0.65, 5.0, 0, 0.42, 0, 'paint'],                      // chassis/body
@@ -5195,7 +5326,7 @@ DC.registerVehicle('pickup', {
     ...WHEELS(0.92, -1.6, 1.55, 0.38)]
 });
 DC.registerVehicle('police', {
-  displayName: 'Abandoned Police Car', w: 1.9, len: 4.4, h: 1.6, maxSpeed: 40, accel: 11, turn: 2.0, hp: 34, tank: 100, fuelUse: 0.6,
+  displayName: 'Abandoned Police Car', w: 1.9, len: 4.4, h: 1.6, maxSpeed: 20.1, accel: 8, turn: 2.0, hp: 34, tank: 100, fuelUse: 0.6,
   paints: [0x111114],
   boxes: [
     [1.9, 0.55, 4.4, 0, 0.3, 0, 'paint'],
@@ -5209,7 +5340,7 @@ DC.registerVehicle('police', {
     ...WHEELS(0.86, -1.4, 1.4)]
 });
 DC.registerVehicle('ambulance', {
-  displayName: 'Ambulance', w: 2.1, len: 5.4, h: 2.6, maxSpeed: 31, accel: 8, turn: 1.5, hp: 45, tank: 140, fuelUse: 0.7,
+  displayName: 'Ambulance', w: 2.1, len: 5.4, h: 2.6, maxSpeed: 20.1, accel: 7, turn: 1.5, hp: 45, tank: 140, fuelUse: 0.7,
   paints: [0xf1f1ee],
   boxes: [
     [2.1, 0.6, 5.4, 0, 0.42, 0, 'paint'],
@@ -5353,15 +5484,15 @@ DC.Vehicle = class {
     }
     DC.emit('carDamage', this, n, why);
   }
-  /* hitting something solid. mph = speed at impact. 60+ mph: at least 3 hearts for the driver and 20% of the car. */
+  /* hitting something solid. mph = speed at impact. 40+ mph (near top speed): at least 3 hearts for the driver and 20% of the car. */
   crash(mph, wall) {
-    if (mph < 22 || DC.creative) return;
+    if (mph < 18 || DC.creative) return;
     const P = this.mgr.game.player, max = this.maxHp();
-    const carDmg = mph >= 60 ? max * (0.2 + (mph - 60) / 250) : mph >= 40 ? max * 0.1 : max * 0.04;
+    const carDmg = mph >= 40 ? max * (0.2 + (mph - 40) / 100) : mph >= 28 ? max * 0.1 : max * 0.04;
     this.damage(carDmg, 'crash'); this.wobble = 1;
     if (this.driver === P) {
-      const hurt = mph >= 60 ? 6 + Math.floor((mph - 60) / 10) : mph >= 40 ? 3 : 1;   // 6 = 3 hearts
-      P.hurt(hurt); if (mph >= 60) DC.ui.notify('CRASH! ' + Math.round(mph) + ' mph');
+      const hurt = mph >= 40 ? 6 + Math.floor((mph - 40) / 5) : mph >= 28 ? 3 : 1;   // 6 = 3 hearts
+      P.hurt(hurt); if (mph >= 40) DC.ui.notify('CRASH! ' + Math.round(mph) + ' mph');
     }
   }
   hoodPos() { const f = this.forward(), T = this.type; return { x: this.pos.x + f.x * (T.len / 2 - 0.7), y: this.visY + T.h * 0.75, z: this.pos.z + f.z * (T.len / 2 - 0.7) }; }
@@ -6043,13 +6174,16 @@ DC.Game = class {
     const $ = id => document.getElementById(id);
     const setBoot = t => { const e = $('bootMsg'); if (e) e.textContent = t; };
     if (location.protocol === 'file:' && !window.DC_ASSETS) $('fileWarn').classList.remove('hidden');
-    Object.assign(DC.config, DC.save.options());
+    Object.assign(DC.config, DC.save.options()); DC.applyColors();
     setBoot('Loading mods…'); await this.loadMods();
     setBoot('Loading textures…'); await DC.tex.load();
     setBoot('Loading models…');
     try {
       this.model = await DC.models.load('models/zombie.geo.json', 'textures/entity/zombie.png');
       this.playerModel = await DC.models.load('models/player.geo.json', 'textures/entity/playerskin.png');
+      this.defaultSkin = this.playerModel.texture.image;
+      let saved = null; try { saved = localStorage.getItem('deadcraft_skin'); } catch (er) { }
+      if (saved) DC.applySkin(saved);   // the skin you uploaded in Options
     }
     catch (e) { console.error(e); setBoot('Could not load models/zombie.geo.json — run with Play DeadCraft.bat or GitHub Pages'); return; }
     setBoot('Loading sounds…'); await DC.sound.load();
@@ -6365,8 +6499,24 @@ DC.Game = class {
     on('bQuit', () => this.quitToTitle());
     on('bRespawn', () => { this.player.respawn(); DC.ui.open = null; DC.ui.show(null); this.lock(); });
     on('bDeathQuit', () => { this.player.respawn(); this.quitToTitle(); });
-    on('bOptDone', () => { DC.save.setOptions({ renderDistance: DC.config.renderDistance, fov: DC.config.fov, mouseSensitivity: DC.config.mouseSensitivity, shaders: DC.config.shaders, renderScale: DC.config.renderScale, itemGlow: DC.config.itemGlow }); DC.ui.show(this.optBack); });
+    on('bOptDone', () => { DC.save.setOptions({ renderDistance: DC.config.renderDistance, fov: DC.config.fov, mouseSensitivity: DC.config.mouseSensitivity, shaders: DC.config.shaders, renderScale: DC.config.renderScale, itemGlow: DC.config.itemGlow, hungerStyle: DC.config.hungerStyle, hungerColor: DC.config.hungerColor, heartColor: DC.config.heartColor }); DC.ui.show(this.optBack); });
     on('oGlow', () => { DC.config.itemGlow = !DC.config.itemGlow; this.showOptions(); });
+    // v0.12: hunger icons / bar, colours, your own skin
+    const hudChanged = () => { DC.applyColors(); if (this.player) DC.ui.hud(); };
+    $('oHunger').addEventListener('change', e => { DC.config.hungerStyle = e.target.value; $('oHungerColor').style.display = e.target.value === 'bar' ? '' : 'none'; hudChanged(); });
+    $('oHungerColor').addEventListener('input', e => { DC.config.hungerColor = e.target.value; hudChanged(); });
+    $('oHeartColor').addEventListener('input', e => { DC.config.heartColor = e.target.value; hudChanged(); });
+    on('oColorsReset', () => { DC.config.heartColor = '#ff375f'; DC.config.hungerColor = '#e8333a'; hudChanged(); this.showOptions(); });
+    on('oSkin', () => $('oSkinFile').click());
+    $('oSkinFile').addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0]; if (!f) return; const rd = new FileReader();
+      rd.onload = () => { const im = new Image(); im.onload = () => {
+        if (im.width !== 64 || (im.height !== 64 && im.height !== 32)) { $('oSkinInfo').textContent = 'That image is ' + im.width + '×' + im.height + ' — a skin has to be 64×64 (or 64×32).'; return; }
+        try { localStorage.setItem('deadcraft_skin', rd.result); } catch (er) { }
+        DC.applySkin(rd.result); $('oSkinInfo').textContent = 'Skin saved on this device!'; }; im.src = rd.result; };
+      rd.readAsDataURL(f); e.target.value = '';
+    });
+    on('oSkinReset', () => { try { localStorage.removeItem('deadcraft_skin'); } catch (er) { } DC.applySkin(null); $('oSkinInfo').textContent = 'Back to the default skin.'; });
     on('oShaders', () => { DC.config.shaders = !DC.config.shaders; this.render.setQuality(DC.config.shaders, DC.config.renderScale); this.showOptions(); });
     const slider = (id, key, fmt, after) => { const el = $(id); el.addEventListener('input', () => { DC.config[key] = +el.value; $(id + 'V').textContent = fmt(+el.value); after && after(); }); };
     slider('oRD', 'renderDistance', v => v + ' chunks');
@@ -6383,6 +6533,8 @@ DC.Game = class {
     $('oScale').value = c.renderScale; $('oScaleV').textContent = Math.round(c.renderScale * 100) + '%';
     $('oShaders').textContent = 'Shaders: ' + (c.shaders ? 'ON (fancy)' : 'OFF (fast)');
     $('oGlow').textContent = 'Item glow: ' + (c.itemGlow !== false ? 'ON' : 'OFF');
+    $('oHunger').value = c.hungerStyle || 'apple'; $('oHungerColor').value = c.hungerColor || '#e8333a'; $('oHeartColor').value = c.heartColor || '#ff375f';
+    $('oHungerColor').style.display = $('oHunger').value === 'bar' ? '' : 'none';
     DC.ui.show('options');
   }
   async showWorlds() {
@@ -6396,6 +6548,16 @@ DC.Game = class {
 function frame() { return new Promise(r => requestAnimationFrame(r)); }
 
 window.addEventListener('load', () => { DC.gameInstance = new DC.Game(); DC.gameInstance.boot().catch(e => { console.error(e); const b = document.getElementById('bootMsg'); if (b) b.textContent = 'Error: ' + e.message; }); });
+
+/* v0.12: heart colour from Options */
+DC.applyColors = function () { document.documentElement.style.setProperty('--ui-heart', DC.config.heartColor || '#ff375f'); };
+/* v0.12: use an uploaded skin (data URL), or null for the default playerskin.png */
+DC.applySkin = function (url) {
+  const g = DC.gameInstance; if (!g || !g.playerModel) return;
+  const tex = g.playerModel.texture, set = img => { tex.image = img; tex.needsUpdate = true; };
+  if (!url) { set(g.defaultSkin); return; }
+  const im = new Image(); im.onload = () => set(im.height === 32 ? DC.models.legacySkin(im) : im); im.src = url;
+};
 
 </script>
 </body>

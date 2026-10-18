@@ -101,6 +101,18 @@ DC.on('nightStart', day => DC.ui.notify('Night ' + day + ' begins!'));
 - `DC.give('iron_machete')` gives you an item.
 - `DC.game.time = 590` skips to just before nightfall.
 
+## v0.12 notes: 11 11s, new gas stations, fenced police, HUD options, your own skin
+- **Fixed:** dying while driving no longer respawns you inside the car. You fall out, and respawn at your spawn point / bed.
+- **Hunger icons are red apples** now. **Options → Hunger** lets you pick red apples, oranges, watermelon, or a **bar** in any colour you like. **Heart colour** has a colour picker too ("Reset colours" puts them back).
+- **Your own skin:** Options → **Upload skin…** takes any Minecraft skin PNG (64×64 or the old 64×32). It's saved on that device, and **Default skin** switches back.
+- **Car top speeds:** sedan 50 mph, pickup / police / ambulance 45 mph. Crashing at 40+ mph does at least 3 hearts and 20% of the car.
+- **Hitting** now throws a proper Minecraft-style punch (not a small lift of the arm).
+- **New buildings** (in worlds you create from now on):
+  - **11 11s**: a corner convenience store. Brick, glass front, an orange / green / red striped sign with a big red "11", aisles, drinks fridges, a coffee corner and the counter.
+  - **Gas Station** redesigned like a real one: a big canopy on white pillars over 3 islands of our 2-tall pumps. Painted concrete: white walls, then a red stripe, a purple stripe and white on top. Plus a matching shop.
+  - **Police Station** now has a **fenced parking lot** out back (wire fence all round) with a **large sliding gate** that opens when you drive up, and a back door.
+- **Saved buildings keep paint, facing and gates** now. Anything you paint or set up in the Creative Realm and save with the Building Wand comes out the same in your survival worlds. In `js/data/buildings.js` you can use `b.paint(...)`, `b.fence(...)` and `b.gate(...)`.
+
 ## v0.11 notes: wire fences, sliding gates, real pause, build anywhere
 - **Pause really pauses** now: time, zombies, cars and everything else freeze while the pause menu is open.
 - **Wire Fence:** a full crafting table of iron (9 ingots). It's a chain-link panel 2 wide x 2 tall, thin like a window pane. **Zombies can't break it, climb it or jump it.** Electric fences with generators are coming later. Break any part and the whole piece comes back as 1 fence.
