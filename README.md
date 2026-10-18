@@ -3,6 +3,11 @@ Open-world block survival set in 2010, after the outbreak. Infinite seeded world
 
 During the day you scavenge. At night the horde comes out, and if zombies **see light** they rush you and tear through anything in their way.
 
+## Two HTML files
+- **`index.html`** is the whole game packed into ONE file (code, textures, models, sounds, mods). This is what GitHub Pages opens, and it works even if the folders never upload. Double-click it to play offline too.
+- **`dev.html`** is the editing version. It reads straight from the folders, so your texture/code changes show up instantly. Open it with **`Play DeadCraft.bat`**.
+- **After you edit textures or code:** run `python tools/build_single.py` to rebuild `index.html`, or ask Claude to rebuild it. Then upload the new `index.html`.
+
 ## Play
 - **iPhone / iPad (and Android):** open your GitHub Pages link in Safari. For full screen, tap **Share → Add to Home Screen** and launch DeadCraft from the home screen. It plays in landscape with touch controls:
   - Left thumb is the joystick. Push it all the way forward to sprint.
@@ -10,7 +15,7 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
   - Buttons: JUMP, HIT/FIRE, USE/AIM/EAT, SNEAK (EXIT in a car), BAG (inventory), TORCH, DROP and pause.
 - **Windows:** double-click **`Play DeadCraft.bat`**. It starts a tiny local server and opens your browser. Keep the black window open while you play.
 - **Online:** upload this whole folder to a GitHub repo, then go to Settings → Pages → `main` / root. Open `https://<you>.github.io/<repo>/`.
-- Use Chrome or Edge with a mouse and keyboard. Double-clicking `index.html` won't work, because browsers block textures from local files.
+- Use Chrome or Edge with a mouse and keyboard. Double-clicking `dev.html` won't work (browsers block textures from local files), but `index.html` does.
 
 **Controls:**
 
@@ -50,11 +55,15 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | **Zombie model** | `models/zombie.geo.json` (open in **Blockbench** as a Bedrock model) |
 | **UI colours / font / slot size / roundness** | `css/theme.css` |
 | **Zombies-hunting-you icon** (top left) | `textures/gui/zombie_icon.png` (any size, square looks best) |
-| **UI layout** | `css/ui.css`, `index.html` |
+| **UI layout** | `css/ui.css`, `dev.html` |
 | **Blocks** (hardness, drops, which tool…) | `js/data/blocks.js` |
 | **Items & tools** (damage, durability) | `js/data/items.js` |
 | **Crafting recipes** | `js/data/recipes.js` |
-| **Supply crate loot** | `js/data/loot.js` |
+| **Supply crate / furniture loot** | `js/data/loot.js` |
+| **The 10 default buildings** | `js/data/buildings.js` (or edit them in the Creative Realm) |
+| **Building library / spawning rules** | `js/structures.js` |
+| **Creative Realm & Creative menu** | `js/creative.js` |
+| **Default key bindings** | `js/keys.js` (players can change them in Options → Controls) |
 | **Day length, zombie counts & speed, sea level, building on/off** | `DC.config` at the top of `js/core.js` |
 | **World generation** (cities, roads, biomes, caves, ores) | `js/worldgen.js` |
 | **Zombie behaviour** | `js/entities.js` |
@@ -86,6 +95,37 @@ DC.on('nightStart', day => DC.ui.notify('Night ' + day + ' begins!'));
 **Console cheats for testing** (press F12 → Console):
 - `DC.give('iron_machete')` gives you an item.
 - `DC.game.time = 590` skips to just before nightfall.
+
+## v0.6 notes: Creative Realm, your own buildings, controls, tires
+### Designing building interiors (houses, hospitals, stores…)
+1. **Singleplayer → Create New → Game Mode: Creative Realm.** It's a flat world: always day, no zombies, no damage, unlimited blocks. **Double-tap Jump** to fly (Jump = up, Sneak = down).
+2. Press **E** (or **BAG** on iPhone) for the **Creative menu**: Blocks, **Furniture** (beds, couches, kitchen counters, stoves, fridges, TVs, desks, shelves, cash registers, medical cabinets, wallpaper, carpet…), Items, Food, Vehicles, Buildings and Props. Tap an item to put it in the highlighted hotbar slot.
+3. Build your house. Include the floor. Put **supply crates**, fridges, wardrobes, store shelves and medical cabinets inside: players can break those for loot.
+4. Take the **Building Wand** (first hotbar slot). **Left-click** one bottom corner (the floor), **right-click** the opposite top corner (the roof). A purple box shows the selection.
+5. Press **B** (or **SAVE** on iPhone). Name it, pick the **type** (decides where it spawns), the side with the **front door** (it guesses from where you're standing) and **how often it spawns**. Save.
+6. **Create a new survival world.** Your building now spawns there:
+   - **House**: town plots, front door turned toward the road (max 22×22)
+   - **Store / Apartment / Office**: city blocks (max 22×22)
+   - **Hospital**: replaces the hospital you wake up in (any size, you spawn in the middle of the ground floor)
+   - **Gas Station**: cities + towns · **Barn / Farm**: farms · **Prop**: never spawns by itself, only from the Creative menu
+   Worlds copy the library when they're created, so old worlds never change under you.
+7. **Creative menu → Buildings**: **Spawn** any building, **Edit** it (it spawns with the selection already set, change it, press B → *Save changes*), **Export / Import** (.json, to share between PC and iPhone, or with friends), **Delete**, and **Restore defaults**.
+   10 default buildings come with the game: Small House, Two-Story House, Farmhouse, Corner Store, Pharmacy, Diner, Police Station, Apartment Block, Hospital and Gas Station. Their code is in `js/data/buildings.js`.
+
+### Controls
+**Options → Controls**: click any action, press the key or mouse button you want. Saved on that device. *Reset to defaults* undoes everything.
+
+### Cars
+- The old block cars on the highways are gone. Only real drivable cars spawn now.
+- Cars crash into each other (they bounce, dent, and can wreck), and they hit you if you stand in the road.
+- **Scrapping:** hit a car with a **pickaxe** (other tools just rock it). It wobbles and falls apart into **iron bars + its tires**.
+- **Tires:** every car spawns with worn tires (50–70% life). They wear down as you drive and can **go flat or blow out** (more likely when old and when you're going fast). A flat makes the car slow and pull to one side. A missing tire means it barely moves. The car HUD shows each tire.
+  - **Sneak + right-click** a wheel on another car to take its tire off.
+  - **Right-click** your car with a **Tire** to put it on (it goes on the wheel you're looking at, or the worst one). You keep the old one if it still has life.
+
+### iPhone
+- Tapping hotbar slots works again (the touch controls were covering the hotbar).
+- The inventory is a bit smaller so it fits better.
 
 ## v0.2 notes
 - **Hunger:** the bar is on the right above the hotbar. Sprinting and jumping make you hungry faster. You only heal when hunger is 7 drumsticks or more, and you can't sprint at 3 or less. Hold right click to eat. Wheat makes bread (3 in a row); supply crates have cans, chips and chocolate.
