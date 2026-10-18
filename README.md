@@ -101,6 +101,31 @@ DC.on('nightStart', day => DC.ui.notify('Night ' + day + ' begins!'));
 - `DC.give('iron_machete')` gives you an item.
 - `DC.game.time = 590` skips to just before nightfall.
 
+## v0.11 notes: wire fences, sliding gates, real pause, build anywhere
+- **Pause really pauses** now: time, zombies, cars and everything else freeze while the pause menu is open.
+- **Wire Fence:** a full crafting table of iron (9 ingots). It's a chain-link panel 2 wide x 2 tall, thin like a window pane. **Zombies can't break it, climb it or jump it.** Electric fences with generators are coming later. Break any part and the whole piece comes back as 1 fence.
+- **Sliding gates:**
+  - **Iron Gate** (2 wide x 2 tall) = wire fence + 2 iron ingots. **Large Iron Gate** (4 wide x 2 tall) = 2 iron gates.
+  - Drive up to a gate and it **slides open to the left** (left of whoever placed it), sliding over the fence next to it.
+  - Place it from the other side and it opens to the right instead.
+  - **5 seconds** after you're through it slides shut, **shoving zombies out of the way**. It never closes on you.
+  - On foot: right-click it.
+  - Settings at the top of `js/gates.js`.
+- **Build anywhere:** every block can be placed in survival now (`allowBuilding` in `js/core.js`).
+- **Options → Item glow:** turns the red glow around dropped items on or off.
+
+## v0.10 notes: faster cars, car damage & explosions, 2-tall gas pumps
+- **Gas pumps** are 1 wide, 2 tall: a red pump with a GAS sign, a screen, a hose and a concrete base. Older worlds' pumps get the top half drawn too.
+- **Top speeds:** sedan 85 mph, pickup 75 mph, police car 90 mph, ambulance 70 mph. Change `maxSpeed` in `js/data/vehicles.js` (blocks/second, x 2.237 = mph).
+- **Crashing hurts:** hitting something at 60+ mph does at least **3 hearts** to you and **20%** to the car (more the faster you go). 40-60 mph = 1.5 hearts, 10%.
+- **Car health (GTA style):** the car HUD shows a health bar (green 90-100%, white 25-90%, red under 25%).
+  - At 0 the engine is wrecked: it **smokes** from the hood and drives at half speed.
+  - Damage it again (zombies clawing at it, crashes, smashing buildings, **bullets**) and it **catches fire**, then **explodes** about 5 seconds later.
+  - The explosion hurts everyone within ~6 blocks, kills nearby zombies, sets other cars off, shatters glass and alerts every zombie around. Get out!
+- **Zombies attack your car** instead of you while you're driving.
+- **Car HUD:** gas is a percentage (a red **E** when empty). The HUD sits 10px above the hotbar, and the item name is hidden while you drive.
+- **Fixed:** a gun no longer fires on its own when you scroll to it. Old clicks are thrown away, and if you're holding the button when you switch, let go first.
+
 ## v0.9 notes: beds, sleeping, flowers, dyes, buckets
 - **Beds** are now real Minecraft-style beds: 2 blocks long, 1 wide, on little wooden legs, with a white pillow at the head. The pillow end goes away from you when you place one. You can stand on them.
 - **Sleep:** right-click a bed at night. The screen fades to black and the night is skipped. A bed takes **5 seconds** to fall asleep, a **sleeping bag 15 seconds**. Sleeping also sets your respawn point.
