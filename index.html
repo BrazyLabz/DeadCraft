@@ -2600,18 +2600,19 @@ DC.tex = {
     const W = img.width, H = img.height, c = document.createElement('canvas'); c.width = W; c.height = H;
     const x = c.getContext('2d'); x.drawImage(img, 0, 0); const px = x.getImageData(0, 0, W, H).data;
     const solid = (i, j) => i >= 0 && j >= 0 && i < W && j < H && px[(j * W + i) * 4 + 3] > 100;
-    const pos = [], col = [], s = 1 / W, t = 1 / 16;
+    const pos = [], col = [], s = 1 / W, t = 1 / W;   // 1 pixel thick, whatever the texture size
     const quad = (a, b, cc, d, r, g, bl, sh) => { for (const v of [a, b, cc, a, cc, d]) { pos.push(...v); col.push(r * sh, g * sh, bl * sh); } };
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
       if (!solid(i, j)) continue;
       const k = (j * W + i) * 4, r = px[k] / 255, g = px[k + 1] / 255, b = px[k + 2] / 255;
       const x0 = i * s - 0.5, x1 = x0 + s, y1 = 0.5 - j * s, y0 = y1 - s, z0 = -t / 2, z1 = t / 2;
       quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], r, g, b, 1);        // front
-      quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], r, g, b, 0.75);     // back
-      if (!solid(i, j - 1)) quad([x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0], r, g, b, 0.9);
-      if (!solid(i, j + 1)) quad([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], r, g, b, 0.55);
-      if (!solid(i - 1, j)) quad([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], r, g, b, 0.7);
-      if (!solid(i + 1, j)) quad([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], r, g, b, 0.7);
+      quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], r, g, b, 0.8);      // back
+      // the 1-pixel edges take the colour of the pixel they belong to (darker so the thickness reads)
+      if (!solid(i, j - 1)) quad([x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0], r, g, b, 0.82);
+      if (!solid(i, j + 1)) quad([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], r, g, b, 0.5);
+      if (!solid(i - 1, j)) quad([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], r, g, b, 0.62);
+      if (!solid(i + 1, j)) quad([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], r, g, b, 0.62);
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
@@ -5207,14 +5208,15 @@ DC.ViewModel = class {
       const m = new THREE.Mesh(roll ? DC.tex.extruded(name, roll.img, roll.key) : DC.tex.extruded(name), this.voxMat); m.userData.shared = true;
       const left = group === this.itemL;
       m.scale.setScalar(0.42);
-      m.rotation.set(0, left ? 1.2 : -1.2, 0); m.rotateZ(left ? -0.35 : 0.35);
+      m.rotation.set(0, left ? 0.95 : -0.95, 0); m.rotateZ(left ? -0.35 : 0.35);   // turned a bit more so the 3D edge shows
       group.add(m);
     }
   }
   /* ---------------- POSES (x right, y up, -z forward, in front of the camera) ---------------- */
   // your bare right arm (empty hand). rx tips it forward, ry turns it, rz leans it on screen.
   // v0.7: rz 0 -> 0.6 stands the arm up (about 100° instead of 60°, like Minecraft)
-  get ARM() { return { x: 0.47, y: -0.6, z: -0.5, rx: 1.92, ry: 0.32, rz: 0.6 }; }
+  get ARM() { return { x: 0.47, y: -0.6, z: -0.5, rx: 1.92, ry: 0.32, rz: 0.72 }; }   // rz 0.72 ≈ leaning 110°
+  get PUNCH_RZ() { return 0.12; }                                                     // ≈ 70° at the end of a punch
   update(dt) {
     const g = this.game, P = g.player, held = P.heldItem(), gun = held && held.gun, off = P.offhand && DC.item(P.offhand.id);
     const hs = P.held(), roll = held && held.roller && hs && hs.paint ? DC.tex.rollerImage(hs.paint, (hs.coats || 0) / DC.paint.COATS) : null;
@@ -5253,12 +5255,14 @@ DC.ViewModel = class {
     } else {
       const A = DC.armPose || this.ARM;
       let x = A.x + bobX, y = A.y + bobY + eq, z = A.z, rx = A.rx, ry = A.ry, rz = A.rz;
-      let ix = 0.36 + bobX, iy = -0.27 + bobY + eq, iz = -0.62, irx = 0, iry = 0;
+      let ix = 0.38 + bobX, iy = -0.23 + bobY + eq, iz = -0.62, irx = 0, iry = 0;
       // right-click (place / use): a quick straight punch forward, like Minecraft — replaces the swing while it plays
       // v0.12: hitting (left-click) is the same punch, plus a little Minecraft-style arc across the screen
       const pu = Math.max(P.placeT > 0 ? Math.sin((1 - P.placeT / 0.25) * Math.PI) : 0, sw), arc = sw > pu - 1e-6 && sw > 0 ? Math.sin((1 - P.swing) * Math.PI * 2) * 0.06 : 0;
-      x -= arc; ix -= arc;
-      if (pu > 0) { z -= pu * 0.3; x -= pu * 0.16; y += pu * 0.1; rx += pu * 0.3; ry -= pu * 0.15; ix -= pu * 0.18; iy += pu * 0.06; iz -= pu * 0.32; irx = -pu * 0.35; iry = pu * 0.2; }
+      x -= arc * 0.5; ix -= arc * 0.5;
+      // v0.13 punch: the shoulder stays anchored below the bottom of the screen (never pulls away from your body);
+      // the arm swings from its resting ~110° lean to ~70° (toward the crosshair) and pushes forward a little
+      if (pu > 0) { rz = DC.lerp(rz, this.PUNCH_RZ, pu); rx += pu * 0.18; z -= pu * 0.16; x -= pu * 0.05; ix -= pu * 0.16; iz -= pu * 0.22; iy += pu * 0.02; irx = -pu * 0.3; iry = pu * 0.15; }
       if (eating) { const b = Math.sin(P.eatT * 18) * 0.02; x = 0.32; y = -0.5 + b; ry = 0.7; ix = 0.12; iy = -0.2 + b; iz = -0.5; }
       this.armR.position.set(x, y, z); this.armR.rotation.set(rx, ry, rz);
       this.itemR.visible = true; this.itemR.position.set(ix, iy, iz); this.itemR.rotation.set(irx, iry, 0);
