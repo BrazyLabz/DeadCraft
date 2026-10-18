@@ -101,6 +101,14 @@ DC.on('nightStart', day => DC.ui.notify('Night ' + day + ' begins!'));
 - `DC.give('iron_machete')` gives you an item.
 - `DC.game.time = 590` skips to just before nightfall.
 
+## v0.13 notes: sliding glass doors, punch, 3D items
+- **Sliding glass doors** (2 wide x 2 tall). The 11 11s and gas station shops use them now instead of oak doors.
+  Walk up to one (or a zombie does) and the two halves slide apart into the walls; they shut 2 s after nobody's near.
+  Craft: 4 glass on top + 2 iron ingots underneath (crafting table). Tweak `DOOR_RANGE`, `DOOR_STAY`, `DOOR_SLIDE` in `js/gates.js`.
+  Only new worlds get the new shop buildings.
+- Punch: the arm stays anchored at the bottom of the screen and swings from ~110° to ~70°. Tweak `ARM` / `PUNCH_RZ` in `js/viewmodel.js`.
+- Items in hand / on the ground are 1 pixel thick with darker edges, like Minecraft.
+
 ## v0.12 notes: 11 11s, new gas stations, fenced police, HUD options, your own skin
 - **Fixed:** dying while driving no longer respawns you inside the car. You fall out, and respawn at your spawn point / bed.
 - **Hunger icons are red apples** now. **Options → Hunger** lets you pick red apples, oranges, watermelon, or a **bar** in any colour you like. **Heart colour** has a colour picker too ("Reset colours" puts them back).
