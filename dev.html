@@ -30,6 +30,7 @@
   <div id="alert" class="hidden">THEY SEE YOUR LIGHT</div>
   <div id="hunters" class="hidden" title="Zombies hunting you"><img src="textures/gui/zombie_icon.png" alt=""><span id="huntersN">0</span><em id="stealthTag" class="hidden"></em><i id="huntBar"><b></b></i></div>
   <div id="notify"></div>
+  <div id="boostHud" class="hidden"></div>
   <div id="carHud" class="hidden"><b id="carName"></b><span id="carSpeed"></span><b id="carFuelPct"></b><span id="carTires"></span><span id="carHp"><i><b></b></i><em></em></span><small id="carInfo"></small></div>
   <div id="selHud" class="hidden"></div>
   <div id="itemName"></div>
@@ -57,12 +58,13 @@
   <div class="splash" id="splash"></div>
   <div class="tagline">After the outbreak · 2010</div>
   <div class="menu">
-    <button class="btn" id="bPlay">Singleplayer</button>
+    <button class="btn" id="bPlay">Play</button>
+    <button class="btn" id="bJoin">Join a Friend</button>
     <div class="row"><button class="btn" id="bOptions">Options</button><button class="btn" id="bMods">Mods</button></div>
     <button class="btn" id="bHelp">How to Play</button>
   </div>
   <div id="a2hs" class="hidden tip">For full screen on iPhone: tap <b>Share</b> → <b>Add to Home Screen</b>, then open DeadCraft from your home screen.</div>
-  <div class="version">DeadCraft v0.6 · made with GOZA</div>
+  <div class="version">DeadCraft v0.19 · made with GOZA</div>
 </div>
 
 <div id="worlds" class="screen solid hidden"><div class="menu panel">
@@ -82,6 +84,17 @@
   <button class="btn" data-back="worlds">Cancel</button>
 </div></div>
 
+<!-- multiplayer: join a friend (js/net.js) -->
+<div id="join" class="screen solid hidden"><div class="menu panel">
+  <h2>Join a Friend</h2>
+  <p class="modeinfo">Your friend opens their world, pauses and taps <b>Host Game</b>. Type the code they see (or just open their invite link).</p>
+  <label class="lbl">Your name</label><input class="field" id="jName" maxlength="16" autocomplete="off">
+  <label class="lbl">Invite code</label><input class="field mp-codein" id="jCode" maxlength="8" placeholder="K7M2Q" autocapitalize="characters" autocomplete="off" spellcheck="false">
+  <button class="btn" id="bDoJoin">Join Game</button>
+  <p class="modeinfo mp-status" id="jStatus"></p>
+  <button class="btn" id="bJoinBack">Back</button>
+</div></div>
+
 <div id="options" class="screen solid hidden"><div class="menu panel">
   <h2>Options</h2>
   <div class="slider"><label class="lbl">Render distance <span class="v" id="oRDV"></span></label><input type="range" id="oRD" min="2" max="12" step="1"></div>
@@ -90,12 +103,21 @@
   <div class="slider"><label class="lbl">Resolution <span class="v" id="oScaleV"></span></label><input type="range" id="oScale" min="0.5" max="1" step="0.05"></div>
   <button class="btn" id="oShaders">Shaders</button>
   <button class="btn" id="oGlow">Item glow</button>
-  <div class="optrow"><label class="lbl">Hunger</label><select id="oHunger"><option value="apple">Red apples</option><option value="orange">Oranges</option><option value="watermelon">Watermelon</option><option value="bar">Bar</option></select><input type="color" id="oHungerColor" title="Bar colour"></div>
-  <div class="optrow"><label class="lbl">Heart colour</label><input type="color" id="oHeartColor"><button class="btn sm" id="oColorsReset">Reset colours</button></div>
+  <button class="btn" id="bColors">Colours…</button>
+  <button class="btn touchonly" id="oPickBtn">Pick block button</button>
   <div class="optrow"><label class="lbl">Your skin</label><button class="btn sm" id="oSkin">Upload skin…</button><button class="btn sm" id="oSkinReset">Default skin</button><input type="file" id="oSkinFile" accept="image/png,image/*" hidden></div>
   <p class="modeinfo" id="oSkinInfo" style="margin:2px 0 6px">Any Minecraft skin PNG (64×64 or the old 64×32).</p>
   <button class="btn" id="bControls">Controls…</button>
   <button class="btn" id="bOptDone">Done</button>
+</div></div>
+
+<div id="colors" class="screen solid hidden"><div class="menu panel">
+  <h2>Colours</h2>
+  <div class="optrow"><label class="lbl">Hunger</label><select id="oHunger"><option value="apple">Red apples</option><option value="orange">Oranges</option><option value="watermelon">Watermelon</option><option value="bar">Bar</option></select><input type="color" id="oHungerColor" title="Bar colour"></div>
+  <div class="optrow"><label class="lbl">Heart colour</label><input type="color" id="oHeartColor"></div>
+  <div class="optrow"><label class="lbl">Hotbar selector</label><input type="color" id="oSelColor"></div>
+  <button class="btn" id="oColorsReset">Reset colours</button>
+  <button class="btn" id="bColorsDone">Done</button>
 </div></div>
 
 <div id="controls" class="screen solid hidden"><div class="menu panel" style="width:min(620px,94vw)">
@@ -128,6 +150,17 @@
 <div id="pause" class="screen hidden"><div class="menu">
   <h2>Game Paused</h2>
   <button class="btn" id="bResume">Back to Game</button>
+  <button class="btn" id="bHost">Host Game · invite friends</button>
+  <div id="hostPanel" class="panel mp-panel hidden">
+    <div class="mp-code-lbl">Invite code</div>
+    <div class="mp-code" id="hostCode">· · · · ·</div>
+    <div class="row"><button class="btn sm" id="bCopyLink">Copy invite link</button><button class="btn sm" id="bShareLink">Share…</button></div>
+    <p class="modeinfo" id="hostInfo"></p>
+    <div class="optrow"><label class="lbl">Your name</label><input class="field mp-name" id="hName" maxlength="16" autocomplete="off"></div>
+    <ul class="mp-players" id="hostPlayers"></ul>
+    <button class="btn sm danger" id="bStopHost">Stop hosting</button>
+  </div>
+  <p class="modeinfo mp-client hidden" id="mpClientInfo"></p>
   <button class="btn" id="bPauseOpt">Options</button>
   <button class="btn danger" id="bQuit">Save &amp; Quit to Title</button>
 </div></div>
@@ -140,6 +173,7 @@
 
 <!-- ============ SCRIPTS (order matters) ============ -->
 <script src="js/lib/three.min.js"></script>
+<script src="js/lib/peerjs.min.js"></script>
 <script src="js/core.js"></script>
 <script src="js/keys.js"></script>
 <script src="js/data/blocks.js"></script>
@@ -170,6 +204,9 @@
 <script src="js/touch.js"></script>
 <script src="js/creative.js"></script>
 <script src="mods/mods.js"></script>
+<script src="js/containers.js"></script>
+<script src="js/traffic.js"></script>
+<script src="js/net.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

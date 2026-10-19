@@ -39,6 +39,77 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | W/S · A/D · Space · Shift (in a car) | Drive · steer · brake · get out |
 | Esc | Pause |
 
+## v0.20 notes:
+- New **Chair** block (Furniture tab, or craft 2 from planks + sticks on a crafting table: `P..` / `PPP` / `S.S`). Black metal legs, a seat and a tall back; it faces you when you place it.
+- Paint chairs with the roller: the seat and back change colour, the legs stay black. Unpainted chairs are black.
+- Hospitals: the blue couches are gone. The lobby has 2 waiting areas, each a row of 5 black chairs with 5 more behind, facing the reception desk.
+- Burger Shack, Wok and Busway: red chairs round the tables instead of couches. The nail salon gets pink ones.
+- Only new worlds get the new buildings. If you edited a copy of these buildings in Creative, use Restore defaults.
+
+## v0.19 notes: new hospital, police stations, shopping centers, traffic lights
+- **Hospital (rebuilt):** a big blue and white hospital, 4 floors. It has white pillars, blue panels, lots of glass, sliding glass doors under a drop-off canopy, red crosses and a HOSPITAL sign tower. Inside: a lobby with reception, patient rooms on every floor, and stairs. It sits between **two parks** (paths, trees, flowers) with the big parking lot in front.
+- **Hospital beds are gone.** Hospitals use normal beds painted **light blue**. (Old hospital beds disappear from old worlds too.)
+- **Police Station** (big, takes a 2 x 2 city block): blue pillars, a tall glass entrance and a POLICE sign. Inside: a lobby and front desk, the main office with **2 cells behind it**, a squad room, offices upstairs, and a **basement with 6 cells**. A **metal emergency door** at the back opens onto a **fenced parking lot (42 spaces)** with a large sliding gate.
+- **Metal Door** (new): 6 iron ingots in 2 columns at a crafting table. **Zombies can't open or break it.**
+- **Shopping Centers** (huge, a 6 x 3 city block, about 230 x 105 blocks): a big parking lot with trees, then **MegaMart** (supermarket: checkouts, 13 aisles, a wall of drinks fridges) plus **Dollar, Fiver, Barber, Nails, Wok (Chinese food) and Busway** (sandwiches). Each store has its own colour and a block-letter sign. Mostly concrete.
+- **Traffic lights** on every city street corner (north-south and east-west take turns: green, yellow, red). **Stop signs** at the town crossings. You can place both yourself (traffic light / stop sign on top of a fence post).
+- Shop signs use a block-letter font: `b.text(...)` in `js/structures.js`. Tweak how often shopping centers / police stations appear in `siteOfCell` in `js/worldgen.js`, and the light timings in `js/traffic.js`.
+- All of this is in worlds you create from now on.
+
+## v0.18 notes: city makeover, gas station, Burger Shack, shiny cars
+- **City streets are 4 lanes** (2 each way): white lane dashes, a yellow centre line and zebra crossings at every intersection.
+- **The hospital has a real parking lot**: 2 rows of marked spaces, a wide aisle, and a driveway out to the town's main road. The ambulances / cop cars park in the spaces.
+- **New gas station** (24 x 24): one long pump island with a 4-wide lane on each side and 4 blocks of headroom, so you can drive through. The shop has 5 aisles of shelves, drinks fridges along the back wall, and a counter you can walk behind.
+- **Cash registers are 3D** and sit on top of the counters (11 11s, corner store, pharmacy, diner, gas station).
+- **Burger Shack** (new): fast food with a **drive-thru**. The lane comes in on the right, runs past the pick-up window and the menu board, and goes out on the left. Inside are booths, an order counter, the kitchen and drinks fridges.
+- **Cars** have glossy paint (a sun highlight + a sheen, gone at night) and round wheels.
+- **Spray paint:** craft a paint bucket + an iron ingot = a **Spray Paint** can of that colour. Right-click a car with it to paint the whole car (1 can = 1 car).
+- **Your hand** sits like Minecraft's now (up from the bottom-right corner, leaning toward the crosshair). Held items are a bit lower / further right, and every item is **2 pixels thick** so it looks properly 3D.
+- The street / parking / building changes are in worlds you create from now on (old worlds keep their layout).
+
+## v0.17 notes: store shelves, drinks fridges, sodas
+- **Store shelves open like a chest.** Right-click one to get 3 rows of 5 slots. Take things, or stock it yourself. Whatever's in a shelf stands on its boards, on both sides of the aisle.
+- **Drinks Fridge** (new, 2 blocks tall, glass door): right-click it and the door swings open, with 6 rows of 8 slots. You can see the drinks through the glass. 11 11s have a row of them along the back wall.
+- **New items:** Cookies, Water Bottle, and three sodas: **Loca Soda**, **Orange Soda** and **Limon Skirt**. A soda gives a **sugar rush: 2x speed for 3 minutes**, and your field of view goes up by 10 while it lasts. A timer shows at the top of the screen. You can drink a soda even when you're full.
+- **Store loot is rare.** A whole 11 11s usually has 2-3 things, sometimes up to 8, and about 1 in 5 has been picked clean. Break a shelf or fridge and whatever's inside falls out. Tweak `LOOT` / `STORE_LUCK` in `js/containers.js`.
+- **11 11s are at least a mile apart** now (in worlds you create from now on).
+- **Creative → Buildings → Edit** opens the building's info first (name, type, front door, how often it spawns). **Edit blocks…** spawns it so you can change the blocks.
+- Textures: `textures/blocks/store_shelf_back.png`, `store_fridge_*.png` and `textures/items/loca_soda.png` etc. (made by `tools/make_v17_textures.py`; you can paint over them).
+
+## v0.15 notes: slabs, fence posts, connected glass, pick block
+- **Renamed:** Asphalt Shingle Block is now **Shingle Block** and Asphalt Shingles (the stairs) are now **Shingle Stairs**. Shingle Blocks drop themselves when you break them.
+- **Shingle Slab:** half a shingle block. Click the top half of a wall (or a ceiling) to get an upside-down slab. Put a slab on the open side of another slab and they become a full Shingle Block.
+  Craft: coal + cobblestone diagonally in a 2x2 = 2 Shingle Blocks. 3 Shingle Blocks in a row = 6 slabs.
+- **Fence Post:** a 2-block-tall metal pole, 0.3 wide. Put one where two wire fences meet to make a clean corner. Craft: 3 iron ingots in a column (crafting table) = 2 posts.
+- **Ladders are thin now.** Your crosshair only hits the ladder itself, so you can mine the block above you while you're climbing. Slabs and posts only highlight the part that's really there.
+- **Connected glass:** glass blocks next to each other lose the frame between them, like the Connected Textures mod, so long windows look like one big pane.
+- **Pick block (middle click):** if the block is already on your hotbar, it selects it. In Creative it puts the block in your current slot. In Survival it swaps it into your current slot from your inventory.
+  On iPhone there's a small **PICK** button at the top left. Turn it off in **Options → Pick block button**.
+- **Options → Colours…** has every colour setting on its own page: hunger, hearts, and the new **hotbar selector** colour.
+- Stairs, slabs and posts now look like their real 3D shape in your hand and on the ground (they used to show as a big flat square).
+
+## Multiplayer (v0.14): play with friends
+Works on your GitHub Pages link, on PC and iPhone, no server needed. The host's browser *is* the server.
+
+**Host (you):**
+1. **Play**, then open or create a world.
+2. Pause (Esc, or the pause button on iPhone) and tap **Host Game**.
+3. You get a 5-letter **invite code** like `K7M2Q`. Tap **Copy invite link** (or **Share…** on iPhone) and send it to your friend.
+4. Keep playing. Friends who join show up in the pause menu. **Stop hosting** turns it back into singleplayer.
+
+**Friend:**
+- Open the invite link, or go to **Join a Friend** on the title screen and type the code. You spawn next to the host.
+
+**What's shared:** every block anyone places or breaks (doors, paint, gates and falling trees too), player positions with name tags and skins, the zombies (the host runs them and they hunt whoever is closest), the time of day, damage, and zombie kills.
+**What isn't shared yet:** dropped items and loot (whoever breaks it gets it), cars (each player has their own), and sleeping. Only the host can skip the night.
+
+- Each friend's inventory is saved on their own device, so they keep their stuff when they rejoin your world.
+- The world only runs while the host is in it. If the host quits, everyone goes back to the title screen.
+- Pausing doesn't freeze the game while friends are playing.
+- Both players need the same version, so re-upload `index.html` and have friends refresh.
+- On iPhone, keep DeadCraft open on screen while you host. If you switch apps, Safari pauses it and friends get disconnected.
+- Players find each other through the free PeerJS service (`js/lib/peerjs.min.js`), which needs internet. After that, game data goes straight between your devices. Settings and code are in `js/net.js`.
+
 ## Folder map: what to edit
 
 | I want to change… | Edit this |
@@ -67,6 +138,7 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | **Day length, zombie counts & speed, sea level, building on/off** | `DC.config` at the top of `js/core.js` |
 | **World generation** (cities, roads, biomes, caves, ores) | `js/worldgen.js` |
 | **Zombie behaviour** | `js/entities.js` |
+| **Multiplayer** (max players, send rates) | `js/net.js` |
 | **Cars** (speed, fuel, HP, and the box models) | `js/data/vehicles.js`. Add your own with `DC.registerVehicle` |
 | **How many abandoned cars spawn** | `carChance` in `DC.config` at the top of `js/core.js` |
 | **Doors, wall torches, paint rules** | `js/interact.js` |
