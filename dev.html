@@ -104,12 +104,26 @@
   <button class="btn" id="oShaders">Shaders</button>
   <button class="btn" id="oGlow">Item glow</button>
   <button class="btn" id="bColors">Colours…</button>
+  <button class="btn" id="bBuildings">Buildings…</button>
   <button class="btn touchonly" id="oPickBtn">Pick block button</button>
   <div class="optrow"><label class="lbl">Your skin</label><button class="btn sm" id="oSkin">Upload skin…</button><button class="btn sm" id="oSkinReset">Default skin</button><input type="file" id="oSkinFile" accept="image/png,image/*" hidden></div>
   <p class="modeinfo" id="oSkinInfo" style="margin:2px 0 6px">Any Minecraft skin PNG (64×64 or the old 64×32).</p>
   <button class="btn" id="bControls">Controls…</button>
   <button class="btn" id="bOptDone">Done</button>
 </div></div>
+
+<!-- v0.21: Options → Buildings (what spawns in your next new world) -->
+<div id="optBuildings" class="screen solid hidden"><div class="menu panel ob-panel">
+  <h2>Buildings</h2>
+  <p class="modeinfo" style="margin-top:0">These buildings spawn in the <b>next world you create</b>. Edit a building to change its name, type, front door or how often it spawns, or export it as a file to share.</p>
+  <p class="modeinfo" id="obCount" style="margin:0 0 8px"></p>
+  <div class="cr-chips" id="obChips"></div>
+  <div class="cr-cards ob-list" id="obList"></div>
+  <p class="modeinfo ob-status"></p>
+  <div class="row"><button class="btn" id="obImport">Import…</button><button class="btn" id="obExportAll">Export all</button></div>
+  <div class="row"><button class="btn" id="obRestore">Restore defaults</button><button class="btn" id="obDone">Done</button></div>
+</div></div>
+<div id="optBuildEdit" class="screen solid hidden"><div class="menu panel sb-panel" id="obEdit"></div></div>
 
 <div id="colors" class="screen solid hidden"><div class="menu panel">
   <h2>Colours</h2>
@@ -178,6 +192,8 @@
 <script src="js/keys.js"></script>
 <script src="js/data/blocks.js"></script>
 <script src="js/data/items.js"></script>
+<script src="js/data/stores.js"></script>
+<script src="js/data/blocks_late.js"></script>
 <script src="js/data/recipes.js"></script>
 <script src="js/data/loot.js"></script>
 <script src="js/structures.js"></script>
@@ -198,11 +214,13 @@
 <script src="js/interact.js"></script>
 <script src="js/trees.js"></script>
 <script src="js/gates.js"></script>
+<script src="js/banners.js"></script>
 <script src="js/viewmodel.js"></script>
 <script src="js/data/vehicles.js"></script>
 <script src="js/vehicles.js"></script>
 <script src="js/touch.js"></script>
 <script src="js/creative.js"></script>
+<script src="js/buildopts.js"></script>
 <script src="mods/mods.js"></script>
 <script src="js/containers.js"></script>
 <script src="js/traffic.js"></script>

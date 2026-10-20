@@ -6,7 +6,7 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 ## Two HTML files
 - **`index.html`** is the whole game packed into ONE file (code, textures, models, sounds, mods). This is what GitHub Pages opens, and it works even if the folders never upload. Double-click it to play offline too.
 - **`dev.html`** is the editing version. It reads straight from the folders, so your texture/code changes show up instantly. Open it with **`Play DeadCraft.bat`**.
-- **After you edit textures or code:** run `python tools/build_single.py` to rebuild `index.html`, or ask Claude to rebuild it. Then upload the new `index.html`.
+- **After you edit textures or code:** double-click **`Rebuild index.bat`** (or run `python tools/build_single.py`, or ask Claude) to rebuild `index.html`. Then upload the new `index.html`.
 
 ## Play
 - **iPhone / iPad (and Android):** open your GitHub Pages link in Safari. For full screen, tap **Share → Add to Home Screen** and launch DeadCraft from the home screen. It plays in landscape with touch controls:
@@ -38,6 +38,30 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | Right click a car | Get in (with a Gas Can: refuel) |
 | W/S · A/D · Space · Shift (in a car) | Drive · steer · brake · get out |
 | Esc | Pause |
+
+## v0.23 notes: wheel stops & freeway sidewalks
+- **Wheel stops are centred now:** aim at the ground in the middle block of a parking space and the 2-block bar is centred there (half a block sticks into the blocks on each side), on the far side. It's one block now. (Wheel stops you placed with the old 2-block version: break and re-place them.)
+- **Cars can't drive over wheel stops** — they stop right at the bar. People still walk over them.
+- **Every parking lot has wheel stops** in every space (city lots and the hospital lot in all worlds; the Shopping Center and Burger Shack in new worlds).
+- **Freeways:** the concrete wall along the sides is gone; there's a 2-block sidewalk on each side instead (in every world, wherever the freeway is generated).
+
+## v0.22 notes: road & parking lines
+- **Lines turn toward you** when you place them now (like logs): look north/south and the line runs north/south, look east/west and it runs east/west. Buildings you rotate turn their lines too.
+- **New line pieces** (Creative → Blocks, white and yellow): **Line T** (a line across with a branch going away from you — for joining parking-space lines to the main line), **Line End** (runs away from you and stops in the middle of the block), **Line Corner** and **Line Cross**.
+- **Parking lots redone** like your hand-made one: solid stall lines, a centre line through each double row, crossings, Ts at the outside ends and Line Ends at every tip. City parking lots and the hospital lot change in every world (your own edits stay); the Shopping Center and Burger Shack lots are in new worlds (or Restore defaults if you edited them).
+- **Wheel Stop** (Creative → Items & Tools): a 2-block concrete parking bumper, 0.3 × 0.3 with sloped sides. Paint it with the roller.
+- All line textures are redrawn on your new black asphalt. If you change `asphalt.png` again, run `python tools/make_v22_lines.py` and then **Rebuild index.bat** so the lines match.
+
+## v0.21 notes:
+- **Options → Buildings…** lists every building that will spawn in the **next world you create**. Tap **Edit** to change its name, type (where it spawns), front door side, how often it spawns (1–10), or switch it **off** for new worlds. Also Import, Export all, Restore defaults. Old worlds don't change.
+- **Export building file**: in Options → Buildings → Edit (and in Creative → Buildings → Edit) you can save a building as a `.building.json` file. Send it to a friend, or attach it in a chat with Claude so Claude can read your build. Import puts it back in.
+- **Creative → Stores** tab with the **11 11 Store Banner**. Right-click a wall to hang it: it covers 4 blocks wide × 2 tall, sits flat on the wall like it's painted on, and pops out a little like the items in your hand. Transparent parts of the picture are see-through. Break any part to take it down (in survival you get it back). Banners you save inside a building keep their picture and turn with the building.
+- **Your own banner picture:** make a PNG in Photoshop with a transparent background, 2 wide : 1 tall (the same shape as the banner: 4×2 → 512×256, 6×3 → 768×384, 12×6 → 1024×512), and save it over its file in `textures/stores/` (e.g. `11_11.png`). `dev.html` shows it right away; for `index.html` run `python tools/build_single.py` again.
+- **Breaking banners works now:** aim at any part of a banner and mine it; the whole banner comes down.
+- **12 more store banners** (Creative → Stores): Corner Store, Pharmacy, Diner, Gas & Go, Burger Shack (6 × 3) and the Shopping Center stores Dollar, Fiver, Barber, Nails, Wok, Busway (12 × 6) and MegaMart (18 × 6). The 11 11 stays 4 × 2.
+- **The stores wear their banners** in new worlds: the Corner Store, Pharmacy and Diner are a bit taller with a sign on the roof, the Gas Station has one on the front of the canopy, the Burger Shack over its windows, and the Shopping Center stores use banners instead of block letters. If you edited one of these in Creative, use Restore defaults to get the new version.
+- Banner pictures are drawn by `tools/make_v21_banners.py` (it never overwrites a picture you replaced).
+- **More stores:** put another PNG in `textures/stores/` and add a line to `js/data/stores.js` (add to the end of the list).
 
 ## v0.20 notes:
 - New **Chair** block (Furniture tab, or craft 2 from planks + sticks on a crafting table: `P..` / `PPP` / `S.S`). Black metal legs, a seat and a tall back; it faces you when you place it.
@@ -133,6 +157,7 @@ Works on your GitHub Pages link, on PC and iPhone, no server needed. The host's 
 | **Supply crate / furniture loot** | `js/data/loot.js` |
 | **The 10 default buildings** | `js/data/buildings.js` (or edit them in the Creative Realm) |
 | **Building library / spawning rules** | `js/structures.js` |
+| **Store banners (pictures + list of stores)** | `textures/stores/` and `js/data/stores.js` |
 | **Creative Realm & Creative menu** | `js/creative.js` |
 | **Default key bindings** | `js/keys.js` (players can change them in Options → Controls) |
 | **Day length, zombie counts & speed, sea level, building on/off** | `DC.config` at the top of `js/core.js` |
