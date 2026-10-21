@@ -39,6 +39,69 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | W/S · A/D · Space · Shift (in a car) | Drive · steer · brake · get out |
 | Esc | Pause |
 
+## v0.28 notes: tool swings, 2-tall fridge, stair rails, elevator breakdowns, Paint + Traffic tabs
+- **Axe and machete** face the right way in your hand now (the blade points forward), and the **machete is longer**.
+- **Real swings:** the machete does a fast diagonal slash, axes / pickaxes / shovels chop down. Swings are quicker (machete fastest) and the machete attacks faster too.
+- **Tool icons** are pictures of the 3D tools now (no more broken-looking pickaxe).
+- **Gas pump:** the full 2-block pump shows in your hand and the inventory, and it **faces you** when you place it.
+- **Cash register and stop sign** have proper 3D item pictures. A **stop sign put on the ground comes with its pole** (on top of a fence post it's just the sign, like before).
+- **Fridge** is 2 blocks tall now (freezer on top), faces you, both doors swing open, and it holds **4 rows of 6** (you might find food inside). The old 1-block fridges in your worlds get their top drawn too. Paintable.
+- **Handrails on stairs:** click the **side of a stair** with a Handrail: the rail stands on the very edge of that step, joins the rails next to it up the stairs and **round corners**, and only blocks that thin edge (you can still walk up the stairs, but not fall off the side). Placing a handrail on the ground works like before.
+- **Elevators can be out of order** (a new chance every day): the panel says OUT OF ORDER and the doors stay shut — take the stairs. Never in the Creative Realm. Chance: `DC.elevatorBrokenChance` in `js/home.js`.
+- **Creative menu:** new **Paint** tab (buckets, roller, spray cans, dyes, buckets) and **Traffic** tab (asphalt, sidewalk, road lines, arrows, wheel stops, stop signs, traffic lights, fence posts, barriers, gas pump, gates…).
+
+## v0.27 notes: kitchen, bathroom, a real mirror, lights
+- **Tables are 3D** now. Put tables next to each other (2 long, 2 x 2, any shape) and they join into one big table: the legs in the middle disappear, only the outside corners keep legs. Paintable.
+- **Chairs face you** when you put them down.
+- **Kitchen:** **Kitchen Sink** (oak cabinet, stainless steel double sink + faucet), **Kitchen Cabinet** (1 door) and **Kitchen Cabinet (2 doors)** with a stone counter top, **Upper Cabinet** (1 or 2 doors, hang it on a wall). Right-click to look inside — the doors swing open. They hold your stuff, and the ones you find in buildings can have food in them. All paintable.
+- **Toilet:** right-click to sit, **sneak + right-click to flush**.
+- **Bathroom Sink Cabinet:** oak (paintable) with a white basin and a tap, 2 doors, storage inside.
+- **Bathtub:** 2 blocks long, runs away from you. Break either half and it all comes back as 1 bathtub.
+- **Shower Curtain:** click a ceiling and it hangs down to the tub (or the floor). Curtains next to each other join up and go round corners (L shapes, U shapes…). You can walk through it. Paintable.
+- **Shower Head:** put it on a wall about 2 blocks up. Click it (left or right) to turn the water on and off.
+- **Mirror** (1 wide x 2 tall): a **real mirror** — it reflects the room and **you** (your skin, walking, sitting). The nearest mirror you're looking at is live; others look silvery. On phones it turns off when Shaders are OFF.
+- **Lights:** **Ceiling Light** (a square panel hanging from the ceiling) and **Wall Light**. Left-click (or right-click) switches them off and on. Like torches, zombies see them at night.
+- Everything is in Creative → Furniture. Recipes are in `js/data/home_blocks.js`. Code: `js/home.js`, `js/mirror.js`. Textures: `tools/make_v27_textures.py`.
+
+## v0.26 notes: furniture + zombies inside buildings
+- **Couch** (the old couch is now 3D): seat, back cushions and arms. Put couches side by side and they join into one long couch (arms only on the ends). It faces you when you place it. **Paint it** with the roller. **Right-click to sit** (Sneak to stand). Craft: cloth + planks (`C..` / `CCC` / `PPP`) = 2.
+- **Table Lamp:** **left-click** (or right-click) switches it on and off. **Sneak + left-click** breaks it. The shade takes paint. A lit lamp lights the room — and at night zombies can see that light, just like a torch. Craft: glass / torch / iron ingot in a column.
+- **End Table** (1 x 1): oak legs, an inset square on top and a drawer with a gold knob (5 slots). Paintable. Craft: `PPP` / `S.S`.
+- **Nightstand:** oak, 2 drawers with gold knobs (5 slots each). Paintable. Craft: `PPP` / `PCP` / `S.S` (C = cobblestone).
+- Small houses get a nightstand with a lamp by the bed and an end table with a lamp next to the couch (new worlds).
+- **Zombies spawn inside buildings now** — stores, the shopping center, the hospital, police stations, houses — mostly in **dark rooms with no torch or lamp nearby**. Light a room (torch or lamp) to keep them from showing up there. Never right next to you. Numbers: `INDOOR` at the top of `js/furniture.js`.
+- Code: `js/furniture.js`, `js/data/furniture_blocks.js`. Textures: `tools/make_v26_textures.py`.
+
+## v0.25 notes: taller hospital, elevators, handrails, road arrows, 3-wide lanes
+- **Hospital floors are 5 blocks high** inside now (was 3). Curtains are 4 high and hang from rods up to the ceiling.
+- **2 elevators** at the back of the lobby replace the 2 staircases. They go to every floor and wheelchairs fit. Walk up and the steel doors slide open; right-click the **panel** inside and pick a floor (G, 1, 2, 3). You can press it from a wheelchair too.
+- **Stairwell** in the north-east corner (in case the elevators are out): one straight flight per floor with **handrails** on both sides. Door from the hallway at the east end.
+- **Handrail** (new, Creative → Furniture, or 5 iron in a ∩ = 4): a grey metal tube rail, 2 blocks tall. Put it beside stairs: rails next to each other join up, climb diagonally with the steps and turn corners. It's solid, so nobody falls off the side.
+- **Elevator Door** (2 wide x 2 tall, slides open by itself) and **Elevator Panel**: build your own elevator. Put a panel in the **same spot** on every floor (same x and z), right-click it, pick a floor.
+- **Hospital beds only heal with an IV drip stand within 2 blocks** of the bed. Without one you can still lie down, but health and hunger don't fill up.
+- **Monitors** at the reception face you as you walk in now (and the ER ones face the waiting room).
+- **Front of the hospital:** an asphalt drop-off lane under the canopy with white road arrows.
+- **Road Arrow** (new item, 3 white dye = 2): aim at the asphalt in the middle of a lane — that block is the **tip** and the arrow (3 wide x 3 long) points away from you, painted on the asphalt. Break any one of its 9 blocks and the whole arrow is gone (the other 8 go back to plain asphalt).
+- **Every car lane is 3 blocks wide** in new worlds: freeways (3 + 3 each way, wider sidewalks) and town main roads. City streets already were. So a road arrow centred on a lane fits exactly.
+- All of this is in worlds you create from now on. If you edited the hospital in Creative, use Restore defaults.
+- Arrow pictures are drawn on your `asphalt.png` by `tools/make_v25_textures.py` (run it again if you repaint the asphalt). Elevator / handrail / arrow code: `js/hospital.js`.
+
+## v0.24 notes: the new hospital, sitting, hiding, 3D tools
+- **New hospital** (in worlds you create from now on): hallways **4 wide x 3 tall** on every floor, patient rooms on both sides, a lobby with a reception desk (2 computer monitors) and waiting chairs, **2 main staircases (2 wide)** up to every floor, side fire exits, and an **EMERGENCY entrance** at the back: waiting chairs facing a small office behind **2 glass windows**. (If you edited the hospital in Creative, use Restore defaults.)
+- **Patient rooms:** 2 **hospital beds**, a **light-blue curtain** between them (and half-drawn in front), an **IV drip stand** by each bed, a glossy **wall cabinet** 3 blocks up over each bed (2 rows x 4 inside, the door swings open), a bedside table with a **Med-Kit**, and a **3-drawer cabinet** (3 drawers of 5). **Wheelchairs** are parked in rooms, hallways and the lobby.
+- **Hospital bed:** right-click to lie down and rest: health and hunger fill back up (at night it also sleeps you through, like a bed). Sneak to get up.
+- **Hide under a bed:** **Sneak + right-click** a hospital bed or a normal bed (not a sleeping bag). You slide under it, your body is hidden, and zombies can't see or hear you, so they lose track. Look around freely. Sneak again (or Jump) to crawl out.
+- **Sit:** right-click a chair (lobby, ER, anywhere). Sneak to stand up. Sneak + right-click still places a block against it.
+- **Wheelchairs:** right-click to sit in one. **W** rolls forward where you look, **S** rolls back, Sneak gets you up (the wheelchair stays where you stopped). You can still fight from it.
+- **Med-Kit** (replaces the medical cabinet): a small white first-aid box. Right-click to open it (4 slots). Ones in hospitals and pharmacies start with bandages and cloth. **Break it and everything stays inside**: it drops as one Med-Kit item (the red number shows how many things are in it), and when you place it again it's all still there.
+- **Pharmacies** have drawer cabinets with wall cabinets above them, and Med-Kits on the counter.
+- **Paint:** one roller dip now paints **20 blocks** in survival. In **Creative paint is unlimited** (the bucket and the roller never run out).
+- **Pick block copies paint (Creative):** middle-click a painted block and you get that block **with its paint** (a coloured dot shows on the slot). Place it and it comes out painted. No rainbow of coloured blocks in the Creative menu needed.
+- **3D tools:** pickaxes, axes, machetes and shovels (wooden, stone, iron) are real 3D models in your hand and on the ground. Colours and shapes: `js/tools3d.js`.
+- New blocks in Creative → Furniture: Hospital Bed, Privacy Curtain, IV Drip Stand, Wall Cabinet, Drawer Cabinet, Wheelchair, Computer Monitor. Recipes (crafting table): curtain x4 = 6 cloth; hospital bed = 3 cloth over 3 iron; wheelchair = iron frame + cloth; Med-Kit = cloth + red dye; IV stand = 3 iron + a water bottle; wall cabinet = 5 planks; drawer cabinet = 8 planks (ring); monitor = iron + glass.
+- Multiplayer: friends see you sitting / in a wheelchair, and you vanish when you hide under a bed.
+- Code: `js/hospital.js` (shapes, sitting, wheelchairs, resting, hiding — numbers at the top), `js/data/hospital_blocks.js` (blocks, items, recipes), hospital layout in `js/data/buildings.js`. Textures: `tools/make_v24_textures.py`.
+
 ## v0.23 notes: wheel stops & freeway sidewalks
 - **Wheel stops are centred now:** aim at the ground in the middle block of a parking space and the 2-block bar is centred there (half a block sticks into the blocks on each side), on the far side. It's one block now. (Wheel stops you placed with the old 2-block version: break and re-place them.)
 - **Cars can't drive over wheel stops** — they stop right at the bar. People still walk over them.
@@ -50,7 +113,7 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 - **New line pieces** (Creative → Blocks, white and yellow): **Line T** (a line across with a branch going away from you — for joining parking-space lines to the main line), **Line End** (runs away from you and stops in the middle of the block), **Line Corner** and **Line Cross**.
 - **Parking lots redone** like your hand-made one: solid stall lines, a centre line through each double row, crossings, Ts at the outside ends and Line Ends at every tip. City parking lots and the hospital lot change in every world (your own edits stay); the Shopping Center and Burger Shack lots are in new worlds (or Restore defaults if you edited them).
 - **Wheel Stop** (Creative → Items & Tools): a 2-block concrete parking bumper, 0.3 × 0.3 with sloped sides. Paint it with the roller.
-- All line textures are redrawn on your new black asphalt. If you change `asphalt.png` again, run `python tools/make_v22_lines.py` and then **Rebuild index.bat** so the lines match.
+- All line textures are redrawn on your new black asphalt. If you change `asphalt.png` again, run `python tools/make_v22_lines.py` (and `tools/make_v25_textures.py` for the road arrows) and then **Rebuild index.bat** so the lines match.
 
 ## v0.21 notes:
 - **Options → Buildings…** lists every building that will spawn in the **next world you create**. Tap **Edit** to change its name, type (where it spawns), front door side, how often it spawns (1–10), or switch it **off** for new worlds. Also Import, Export all, Restore defaults. Old worlds don't change.
