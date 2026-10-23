@@ -39,6 +39,95 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | W/S · A/D · Space · Shift (in a car) | Drive · steer · brake · get out |
 | Esc | Pause |
 
+## v0.48 notes: Novera Corp, walk animation
+- **Novera Corp** ("Better Medicine, Better Health") — the Oscorp of this world. New city worlds get about one of each per city:
+  - **Novera Tower:** a slim white glass tower, 7 floors. The lobby has a reception desk, the floors above are labs, the CEO's office is on top, and the big logo is on the roof.
+  - **Basement:** storage racks. A metal door in the corner hides a ladder shaft that drops about 100 blocks.
+  - **Secret lab** at the bottom: white concrete, 6-high rooms, lights everywhere, a control room and test rooms with observation windows off a long corridor. Ready for mutated zombies later.
+  - **Novera Warehouse:** two 6 x 3 roll-up gates and racks of crates.
+  - **Novera delivery van:** a white box truck with the logo on both sides, parked around the city.
+  - The logos are in `textures/stores/novera*.png` (transparent). Edit the buildings in `js/data/novera_buildings.js`.
+- **Banners and signs** stick out twice as far (thicker).
+- **Walking in 3rd person:** your legs swing with how far you walk (no more gliding), and the body bobs, twists and rolls a little with each step. It's a bit stronger when you run. Settings are in `WALK` in `js/avatar.js`.
+- **Sneaking:** the body leans forward from the hips, the head stays level, and the camera drops a little (in 1st person too).
+- **Shotgun:** aiming brings it closer, and in 3rd person your left hand holds the barrel.
+
+## v0.45 notes: street fix, 3rd person guns
+- **Streets (new worlds):** a city avenue no longer runs right alongside the main road through the city. If it would be closer than a building lot, it's a strip of park (grass + sidewalk) instead, with no sewer under it and no parked cars. Change the gap in `tooClose()` in `js/worldgen.js`.
+- **3rd person guns:**
+  - Rifles and shotguns are held across your chest (low ready). Right-click to aim and the stock comes up to your shoulder, pointing where you look.
+  - Your right hand is on the grip and your left is under the barrel.
+  - The pistol is 20% smaller and sits in your fist.
+  - Shots and tracers come out of the gun's barrel, not your face.
+- **No shooting while sprinting.**
+
+## v0.44 notes: gun hands, light strips, neon stores
+- **Gun hands fixed:**
+  - On the AK your right hand is on the grip and trigger, and your left hand is under the barrel. The arms no longer cross.
+  - In 3rd person, looking down doesn't drop your arms, and the gun's grip sits in your fist.
+- **Light Strip (new block):** a ceiling light that joins with the ones next to it. One on its own is a square panel, and 3 in a row make a 1 x 3 strip light.
+  - Click it to turn it off and on.
+  - It runs on batteries, so it works with the grid down, and it doesn't give you away to zombies.
+  - Craft it from 1 iron + 1 glass + 1 torch (makes 3).
+- **Stores:**
+  - Gas stations have 1 x 3 strip lights under the canopy and in the shop.
+  - 11 11s has neon orange / green / red stripes and strip lights inside.
+  - The Diner has a pink and cyan neon trim and strip lights over the booths.
+
+## v0.43 notes: new guns, round sewers, neon, house fix
+- **Guns:**
+  - The pistol is a 1911-style handgun with wood grips, held one-handed off to the right so you see its side.
+  - The rifle is an AK with a wood stock and a curved mag. Your hands sit on its grip and handguard.
+  - Aiming lines the sights up on the crosshair.
+  - In 3rd person the guns are bigger, and you hold rifles with both hands.
+- **Sewers (new worlds):** a round brick tunnel, 2 blocks bigger all round, with a 3-wide channel of green-brown **sewage water** one block below the walkways. Ladders go all the way down. Edit the size in `SEWER` in `js/sewers.js`. Old worlds keep their old tunnels so they still join up.
+- **Neon block:** glows in the dark like an LED strip. It's highlighter yellow to start. Craft it from 1 glass + 1 torch (makes 4).
+- **Spray paint:** right-click any paintable block (neon, concrete, siding, wood…) to paint it. One can paints 10 blocks, or 1 car.
+- **Neon on buildings:**
+  - Gas stations have neon red and purple bands round the canopy and the shop.
+  - **1 in 20 cities is a neon city:** coloured bands turn to neon, and building corners and roof edges are lined with purple, pink and cyan neon. Settings are in `NEON` in `js/neon.js`.
+- **Houses:** the missing row of siding under the roof (gable ends) is fixed. Old worlds pick up the fixed houses in places you haven't explored yet.
+
+## v0.42 notes: spectator mode, a smaller Options screen
+- **Spectator mode:** Options → Mode now cycles **Survival → Creative → Spectator**.
+  - Fly anywhere, straight through walls and the ground. Jump goes up, Sneak goes down, Sprint goes faster.
+  - Zombies can't see, hear or hurt you, and you can't break, place or pick up anything.
+  - The hotbar, hearts and XP bar are hidden.
+  - Switching back to Survival puts you on the ground at the first open spot, with no fall damage.
+- **Options screen:** smaller and laid out in two columns, so the top and bottom buttons don't fall off the screen. On small screens it shrinks to fit.
+
+## v0.41 notes: smarter zombies, real 3D items in your hand
+- **Zombies find their way to you:**
+  - Run upstairs and they head for the stairs and come up.
+  - They also climb ladders, jump up 1 block, drop down up to 3 blocks, and go through wooden doors (opening them).
+  - They only claw through a wall when there's no other way (or they've been stuck for a while).
+  - Tweak it in `PATH` at the top of `js/zpath.js` (search size, searches per frame, costs).
+- **Held items in 3rd person and mirrors:** tools and guns are the same 3D models as in 1st person, held properly (handle in the fist, pointing forward) instead of the flat pixel icon.
+
+## v0.40 notes: XP & skills, crawlers, night darkness, sewer fog
+- **XP and levels:** kill zombies and mine ores and they drop purple XP orbs that fly to you. You also get XP for fixing a flat tire (+10), cooking (+10), painting a block (+5), crafting something for the first time (+10) and discovering a new place (+50, with a "DISCOVERED" banner). The purple bar above the hotbar shows your level. Levels 1–5 take 500 XP each, 5–10 take 1,000, 10–15 take 2,000, and after that each level takes 500 more. Every level up gives you 1 skill point.
+- **Skills:** press E, then click **Skills** (under the Crafting Book). There are three branches:
+  - **Physicality:** Heavy Hands (+5% melee damage per rank, 5 ranks), then Iron Grip (+4% mining speed per rank, 5 ranks).
+  - **Agility:** Quick Feet (+3% movement speed per rank, 5 ranks).
+  - **Health:** Tough Skin (+1 heart, which is +10% health, per rank, 5 ranks).
+  - Unlocking a tier 1 skill opens the two after it. The "?" slots are ready for the skills you draw next.
+  - Edit the numbers and the tree in `js/skills.js`. The icons are white PNGs in `textures/gui/skills/`, so you can paint over them (keep the file names).
+- **Crafting Book:** things you've never crafted are grey. They get their colour the first time you craft them.
+- **Zombies:**
+  - Walkers now limp: one stiff leg, swaying and lurching.
+  - New **crawler** zombie: it drags itself along the ground and is easy to miss in tall grass. It has less health and is slower.
+  - Zombies no longer pop out of thin air. On dirt, grass or sand they claw their way up out of the ground with dirt flying. Tweak `crawlers`, `riseTime` and `limp` in `DC.zombieAI` (`js/entities.js`).
+- **Night:** black fog from about 30 blocks out, with a dark band between the street and the sky that fades up into the stars. Change `nightFogDist` in `js/core.js`, or set `nightFog: false` to turn it off.
+- **Sewers:** a thick Silent Hill-style fog (about 20 blocks) and dim, even light, so the far tunnels and the black lighting glitches fade into murk.
+- **Moving:**
+  - Sneaking stops you walking off edges, like Minecraft.
+  - Sprinting widens your view, and your head and hand bob harder.
+  - F5 now cycles 1st person → 3rd person behind → 3rd person front. In "behind", the mouse looks around freely and WASD turns your character.
+  - Your head turns first and your body follows, so you don't glide around.
+
+## v0.39 notes: 3D diamond tools
+- Diamond pickaxe, axe, machete, shovel and hoe now use the same 3D models as the iron tools instead of the flat pixel look: purple heads/blades and black handles. Tweak the colours in `MAT.diamond` / `HANDLE_BY` in `js/tools3d.js`.
+
 ## v0.38 notes: new roads + sewers (new worlds)
 - **City avenues, 25 wide:** sidewalk 2 · white line · lane · dashes · lane · yellow line · **middle turn lane (3)** · yellow line · lane · dashes · lane · white line · sidewalk 2. Zebra crossings + signal masts at the corners.
 - **Main avenues / freeways, 21 wide:** the same without the middle lane (double yellow in the centre, white edge lines, 2-block sidewalks).
