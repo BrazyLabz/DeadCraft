@@ -39,6 +39,121 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | W/S · A/D · Space · Shift (in a car) | Drive · steer · brake · get out |
 | Esc | Pause |
 
+## v0.34 notes: chunkier look, lights out, copper & diamonds
+- **Slightly 3D blocks:** every block face has a soft bevel (lit top edge, darker sides / bottom) so blocks look like chunky raised cubes, plus a brighter, more saturated cartoon colour grade.
+- **The grid is down:** street lamps, traffic signals, house lights, lamps and TVs don't work any more — only the **hospital** has power (its lights stay on 24/7). Switching something on elsewhere says "No power". Generators will plug into `DC.powered()` in `js/power.js`.
+- **Light keeps zombies away:** none spawn within about half a light's reach (a torch protects ~7 blocks around it). **F4** = dev overlay: red squares where a zombie could spawn, purple where light makes it safe.
+- **Copper ore** (orange / green specks, stone pickaxe+): raw copper → copper ingot (+ coal) in the Crafting Book — for electricity later. Coal, iron and copper are everywhere underground, a bit more common 20+ blocks down.
+- **Diamond ore**: only 150+ blocks under the streets, rare small pockets. Stone with **purple crystals sticking out** of it. Needs an iron pickaxe. Diamonds make **diamond tools** (pickaxe, axe, shovel, machete, hoe — fastest and toughest).
+- Engine: block ids are 16-bit now, so the game can have up to **1024 kinds of block** (was 256). Old saves still load.
+
+## v0.33 notes: real elevators
+- **Elevator** (Crafting Book → Building: 20 iron + 2 glass): a 4 wide x 3 deep x 4 tall stainless steel cab that really moves. Place it on the bottom floor of a shaft (right-click the floor; the 2 sliding steel doors face you). Walk in: steel walls, handrail, diamond-plate floor, ceiling lights, and a keypad on the right-hand wall by the door.
+  - Right-click **▲** / **▼** on the keypad: the doors shut, it rides **one floor = 4 blocks** (our buildings are 4 blocks per floor, so it stops level with the floor above), *ding*, doors open. You (and zombies, and dropped items) ride with it — you can't fall out of it or walk through its walls.
+  - An arrow is **lit red** when it can go that way and **off** when something blocks it (a block above the cab = only down). Cut a 4 x 3 hole in each floor for the shaft.
+  - **Calling it:** put an **Elevator Panel** (now also the call button, 2 iron) on a wall within 3 blocks of the shaft on each floor. Right-click it and the elevator comes up / down to your floor and opens its doors.
+  - Sneak + right-click the keypad inside to pick the elevator back up. Saved with the world (not shared in multiplayer yet).
+  - Tweak speed / door time in `js/lift.js`; textures are `textures/blocks/elevator_*.png` (`tools/make_v33_textures.py` makes them).
+- The Crafting Book button is centered in the inventory now (the extra "Crafting" title and hint are gone).
+
+## v0.32 notes: crafting book, falling trees, stove cooking
+- **Crafting Book.** Press E: the crafting grid is gone, there's a **book** instead. Click it and the inventory panel (same size) turns into the crafting page: categories on the left (Tools, Weapons, Food, Medical, Building, Furniture, Lights, Doors & Fences, Paint, Vehicles, Materials), everything in that category in the middle (green = you can make it now), and on the right the **materials required** with how many you have (e.g. Iron Machete: 2 Iron Ingot, 1 Stick). Click **CRAFT** (shift-click = as many as you can). Click *Inventory* to go back. Everything can be crafted anywhere in survival — no table needed (a crafting table just opens the book).
+  - New prices: Pistol 5 iron · Pump Shotgun 1 oak log + 10 iron · Rifle 8 iron + 2 planks · Store Shelf 10 iron · lights 3 iron · appliances 8 iron… Things that never had a recipe got a simple one.
+  - **Change any recipe** in `RECIPES` at the top of `js/craftbook.js` (`needs: { iron_ingot: 30, tire: 4 }`, `count:` = how many you get). Natural stuff (logs, ores, meat, flowers…) is in `RAW` and stays out of the book.
+- **Falling trees.** Chop the bottom of a tree (by hand too): it **drops** onto the stump with gravity, then **tips over**, shedding leaf pixels on the way down. When it hits the ground there's a heavy crash, the **screen shakes** (more when you're close / the tree is big) and it bursts into leaf and bark pixels, leaving its logs, sticks (always at least 2) and sometimes apples.
+- **Stove cooking (like a campfire).** Hold raw beef or raw venison and right-click a stove: it goes on the burner you're pointing at (4 burners). The burner glows red, the meat steams and sizzles, and after 12 seconds it turns into steak / cooked venison right on the burner. Right-click a burner to take it. Electric, so no fuel. Break the stove and the food falls off. Change foods / time in `js/stove.js`.
+
+## v0.31 notes: heavy-duty pickup, pump shotgun
+- **New pickup truck**: a lifted heavy-duty crew-cab "dually": tall square hood, big grille in a grey surround, wide bumper, tilted windshield, tow mirrors, amber roof lights, wide rear fenders and **2 tires on each side at the back** (the pair shares one tire slot, so tire swapping works the same). Mostly black, sometimes red, blue, tan, green or white. Old pickups in your worlds change to the new look. Edit it in `js/data/vehicles.js` (new box options: `rx` tilts a part, `tire` makes a wheel share a tire, `hub` / `hubColor` / `cap` for the wheel centres).
+- **Pump Shotgun** (crafting table: `I I I` / `P I P`, I = iron ingot, P = planks): 8 pellets a shot, huge up close, weak far away, a pump (you see the forend slide) between shots, deep boom, zombies hear it from far. Each pellet hits blocks at half a bullet's strength. Tweak it in `js/data/items.js`; drop a real `sounds/pump.wav` in for the pump sound, or change `gunshot_shotgun` in `sounds/sounds.js`.
+
+## v0.30 notes: blocks chip, crack and stay damaged
+- **No more black shading or red ring when mining.** Hold left click and pixels chip out of the block **right where your crosshair is**, flying off in the block's own colours. When it breaks, the whole block bursts into its pixels.
+- **Damage stays.** Stop halfway and walk away: the block keeps its damage (and its holes) — come back and finish it. It's saved with the world and shows for friends in multiplayer.
+- **Bullet holes.** Every shot leaves a hole where it hits. Some blocks break after enough hits:
+
+  | Block | Bullets to break |
+  |---|---|
+  | Glass | 1 |
+  | Leaves | 5 |
+  | Drywall, wallpaper, hospital walls | 8 |
+  | Wood (planks, logs, siding, fences, doors…) | 10 |
+  | Brick | 30 |
+  | Concrete (and sidewalk, barriers) | 40 |
+  | Stone, dirt, metal… | holes only |
+
+  Change the numbers in `DC.config.bulletHP` at the top of `js/damage.js`, or give one block its own: `bulletHP: 25` in its block definition (0 = bulletproof).
+- **Screens pop.** Computer monitors and flatscreen TVs flicker (white / blue static) every time they're shot and crack where the bullet hit, then **pop** in a flash of sparks, glass and smoke: monitors on the 3rd shot, TVs on the 4th (`SCREENS` in `js/damage.js`).
+- **Cars dent what they bump.** Tap a wall slowly and it gets a dent and cracks; hit it again and it gets worse. ~25 mph knocks out wood, brick and concrete take a few hits (`DC.config.carDentPower`). Full speed still smashes straight through like before.
+- **Zombies leave claw marks** on the walls they tear at, and if they give up, the next one carries on from the damage that's there.
+- Mining progress works the same as before (same tools, same times) — it's just shown on the block now.
+
+## v0.29f notes: fences, spaced-out neighborhoods, more homes, parks, piers
+- **Stealth is stealth**: while you sneak out of their sight, a hunter's growl doesn't call anyone new or remind the others where you are, and no stragglers join. Once one of them sees you again, the old rules are back.
+- **Zombies use doors**: a hunter that walks into a wall looks for a door nearby, walks round the house to it (following the wall) and opens it. They only claw through walls when there's no door.
+- **No more stacking**: zombies push each other apart, so they can't stand inside each other.
+- **Picket fence** (2 sticks + 2 planks, 4 of them): oak, 1 block high, paint it any colour. **Wire fence** is now 1 block high too. Both join up with the fences and walls next to them; stack one on another for a 2-high fence (the top one gets the posts' caps / pointy pickets).
+- **New worlds** (old worlds keep their old land):
+  - Homes have **3 blocks of yard each side** and a fence between neighbours and along the back (white or wooden picket, or chain-link, 1 or 2 high).
+  - 4 kinds of home: the 2-story suburban house, a 1-story **ranch house** (2 bedrooms, 1 bathroom), a **bungalow** (1 bedroom, 1 bathroom) and an **apartment complex** (12 studio flats over 2 floors, outside stairs, a balcony walkway and its own parking lot).
+  - **Big parks**: paths, a pond, a fountain, benches, lamps and trees.
+  - **Amusement piers** off some sandy beaches: a boardwalk on piles, an arch, lamps, food booths and a ferris wheel.
+  - In cities, stores, gas stations (and 11 11s) are **spread out** — no two within 2 blocks of each other — and parking lots never sit side by side.
+  - **City parking lots**: a hedge round the edge, driveways in, a planted island down the middle with light poles, planters at the ends of each row.
+
+## v0.29e notes: zombies that feel real
+- **Fewer around, a pack that grows**: at night about 60 zombies wander around you (not 200). When one spots you, its growls pull in a few more at a time, and stragglers who heard the commotion join now and then — up to a pack of **20** chasing you (+2 each night, max 40; 8 in the day).
+- **They notice you over time**: zombies only see what's in front of them (unless you're right next to them). A glimpse fills an awareness meter: first they turn and shamble over to look; only when it fills do they come running. Far away, sneaking, standing still or behind glass = much slower to notice. Out of sight they forget you and wander off.
+- **No more instant spins**: they turn toward things gradually and walk the way they face. Lose them and they go and search where they last saw you.
+- **Noise** (guns, engines): the closest come running (up to the pack size), the rest come over to see what it was.
+- Each zombie shambles at its own pace; a few are fast. Tweak it all in `DC.zombieAI` at the top of `js/entities.js`.
+
+## v0.29d notes: smoother at night with the horde
+- Walls the horde smashes are cleared in batches (one relight + re-draw per area a few times a second, instead of per block). Only changes close to you are re-drawn right away; far ones wait their turn, so a frame never spends more than ~10 ms re-drawing.
+- Faster block lookups (the world remembers the last chunk it looked in), zombie bodies are 1 mesh per body part shared by every zombie, far-away zombies look around less often, and the shader handles 16 nearby lights instead of 24 (whole streets of lamps at night).
+- Still laggy? Options → lower Render distance, or lower `zombiesNight` in `js/core.js`.
+
+## v0.29c notes: hide in wardrobes, 3D bookcase, coffee table, paint that sticks, flat drywall
+- **Wardrobe** is 2 wide x **3 tall** now. **Sneak + left-click** it to climb in and **hide** (they can't see or hear you) — you look out through the crack between the doors. Sneak or jump to step out.
+- **Paint sticks**: break a painted block in Survival (concrete, a couch, a bed, a chair, a sleeping bag…) and it drops **still painted** (painted concrete / siding come back as themselves). Painted items **show their colour** in the inventory and hotbar, stack with the same colour, and place painted. Pick block in Creative copies the colour too.
+- **Drywall** is a smooth, flat white block now — paint it for clean coloured walls. Breaking it gives it back.
+- **Bookcase**: a real 3D oak bookcase, books only on the front, faces you when you place it. Paint changes the wood, not the books.
+- **Coffee Table**: a low table (`PPP` / `S S` = 2). Put them side by side for a longer / wider one (inside legs disappear). Paintable.
+- **Store shelves** show their products a bit bigger and at the front edge.
+- **Houses** (new worlds): the upstairs hallway is 2 wide, the upstairs bathroom matches the downstairs one (shower head always over the tub), a coffee table in the living room, bookcases face the room.
+- **1st / 3rd person**: Options → Controls → "1st / 3rd person view" (F5 by default).
+
+## v0.29b notes: avenues, street lights, signal masts, bridges, no dead ends, 2 x 2 wardrobe
+- **New worlds only (roads / towns / cities):**
+  - **Avenues**: city streets, town main roads and freeways are 2 lanes each way (3 wide, white dashes), a **double yellow line** in the middle and **3-block sidewalks** with **street lights** that light the road at night.
+  - **Residential streets**: 1 lane each way with 2-block sidewalks and street lights; stop signs where they meet the avenue.
+  - **Signal masts** (European style) on every corner of a crossing: the heads hang from the arm on short rods, with a street light in the middle. Zebra crossings and rounded corners.
+  - **No more dead-end roads**: a road that would stop in the middle of nowhere carries straight on until it meets another road. Freeways run straight through cities.
+  - **Bridges**: where a road crosses water it's a **suspension bridge** — deck on pillars, railings, tall towers with cables and hangers.
+- **Houses**: the garage door no longer replaces a bathroom wall (the door's direction now turns with the house, so driving up opens the right door). The ground-floor bathroom is laid out properly: tub along the wall with the curtain in front, toilet, sink with the mirror over it, room to walk in. Bedrooms get the new wardrobe.
+- **Wardrobe**: 2 wide x 2 tall oak, two doors over a drawer, **paintable**, right-click for 3 rows of 6. (Old 1-block wardrobes in your worlds show as a small wardrobe.)
+- **Filing cabinet**: drawers only on the front, and it faces you when you place it.
+- **Street lights don't give you away** to zombies at night (torches, lamps and room lights still do).
+- New in the Traffic tab: **Street Lamp** (right-click the ground; the arm reaches out the way you look) and the **Double Yellow Line**.
+
+## v0.29 notes: neighborhoods, garage doors, farming, flowing water, cows + deer, bandits, 3rd person
+- **Neighborhoods** (new worlds): every town is a suburb now — the main roads get 2-block sidewalks, 2 more streets run across each town (sidewalks both sides, stop signs where they meet the main road), and rows of **suburban houses** face the streets. Some plots are little farms (with water channels) or a patch of trees.
+- **Suburban house** (25 x 25, 2 versions: garage left / right): living room (couch, flatscreen TV, coffee table, bookshelves), **dining table with 4 chairs**, kitchen (2-tall fridge, stove, sink, cabinets, upper cabinets), **2 full bathrooms** (tub + curtain + shower head, toilet, sink + mirror), **3 bedrooms** upstairs, a **basement** (rec room with a couch + TV, workbench, storage, a fridge), stairs up and down, and an **inside door into the 2-car garage**. Every house is painted its own siding colour (white, light blue, yellow, beige, sage, gray, navy…). Concrete driveway → 2-block sidewalk → street.
+- **Garage Door** (6 wide x 3 tall): **drive up to it in a car and press W** — it rolls up into the ceiling. It shuts by itself once the doorway is clear. On foot: right-click it to open / shut. Placeable (iron ingots, craft `III` / `I I` / `I I`) and paintable.
+- **Flatscreen TV**: the old TV block is a 1 x 1 flatscreen on a stand now. **Left-click to turn it on**: a blue screen with **NO SIGNAL** bouncing around.
+- **Traffic signal masts** in cities (new worlds): a tall pole on every corner with an arm over the lanes and signal heads hanging from it (they change like the old traffic lights). Item **Traffic Signal Mast** in the Traffic tab: right-click the ground (the arm points the way you look; sneak = heads face the other way; right-click a mast with another one = longer arm).
+- **No brick**: the diner, apartment block, 11 11s, city apartments / stores and gas station shops use painted siding / concrete now. New paint colours (for the world): gray, beige, sage, navy.
+- **Signs**: the hospital has a real **HOSPITAL** sign (and **EMERGENCY** on the back), the police station a **POLICE** sign — no more block letters. (They're on the Stores tab too.)
+- **Streets connect**: freeways run straight through cities now (no more roads that stop at a city block), and streets carry on across the gap where two towns or two cities meet.
+- **Farming**: **Wooden / Stone / Iron Hoe** (`MM` / ` S` / ` S`): right-click dirt or grass → farmland. Plant **Wheat Seeds** (from tall grass, ripe wheat, or 1 wheat → 2 seeds) or **Carrots**. Farmland needs **water within 4 blocks** (it turns darker) or it dries back into dirt (and the crop pops off). Crops grow in 8 steps (~4 minutes on wet farmland).
+- **Flowing water**: water you pour falls straight down and spreads up to **7 blocks** where it lands, getting shallower; take the source away and it dries up. 2 sources next to each other make a new one. Only the source can be scooped with a bucket.
+- **Cows and deer** wander in groups of 1-3, sometimes with a baby. When zombies get close they run — **cows 1.5x, deer 2.5x as fast as you walk**. **Tame** them by feeding (cows: wheat, deer: carrots), then feed 2 tamed ones to make a **baby** (5 minute rest after). Babies grow up in 10 minutes. Tamed animals follow you when you hold their food and are saved with your world. Raw beef / raw venison (cook with coal at a crafting table → steak / cooked venison). Settings: `CFG` in `js/animals.js`.
+- **Bandits**: rare (about 1 group per 60 zombies), 1-4 survivors with machetes. If they see you they come running at you. They only pull their guns once **you shoot** one of them. They can drop machetes, a pistol, bandages, food.
+- **3rd person**: press **F5** (Options → Controls) to switch to a camera behind you and back. You see your player with whatever you're holding.
+- **Light fix**: big buildings (the hospital) had a hard edge where one part of a room was lit and the rest pitch black — every chunk now keeps light at street level. **Ceiling and wall lights give white light** now (torches and lamps stay warm), and the **hospital has ceiling lights** on every floor (lobby, hallways, rooms). Like torches, lit lights let zombies see you at night — click one to switch it off.
+- **Fixes**: breaking one half of a mirror / stop sign / fridge takes the whole thing down; stop signs stand on a **thin pole** and their back is a grey octagon; the fridge shows its **4 rows of 6** properly; in the mirror your arm swings **forward** when you hit.
+- Code: `js/town.js` (garage doors, TV, masts, sign pole), `js/farming.js`, `js/water.js`, `js/animals.js`, `js/avatar.js` (3rd person + mirror model), `js/data/town_blocks.js`; neighborhoods in `js/worldgen.js` (`suburbColumn`), the house in `js/data/buildings.js`. Textures + cow / deer models + bandit skin: `tools/make_v29_textures.py`.
+
 ## v0.28 notes: tool swings, 2-tall fridge, stair rails, elevator breakdowns, Paint + Traffic tabs
 - **Axe and machete** face the right way in your hand now (the blade points forward), and the **machete is longer**.
 - **Real swings:** the machete does a fast diagonal slash, axes / pickaxes / shovels chop down. Swings are quicker (machete fastest) and the machete attacks faster too.
@@ -216,7 +331,7 @@ Works on your GitHub Pages link, on PC and iPhone, no server needed. The host's 
 | **UI layout** | `css/ui.css`, `dev.html` |
 | **Blocks** (hardness, drops, which tool…) | `js/data/blocks.js` |
 | **Items & tools** (damage, durability) | `js/data/items.js` |
-| **Crafting recipes** | `js/data/recipes.js` |
+| **Crafting recipes** (the Crafting Book) | `RECIPES` in `js/craftbook.js` (old grid recipes in `js/data/recipes.js` are used when an item isn't listed there) |
 | **Supply crate / furniture loot** | `js/data/loot.js` |
 | **The 10 default buildings** | `js/data/buildings.js` (or edit them in the Creative Realm) |
 | **Building library / spawning rules** | `js/structures.js` |
@@ -234,6 +349,7 @@ Works on your GitHub Pages link, on PC and iPhone, no server needed. The host's 
 | **Garages, driveways, house roofs** | `js/worldgen.js` (`housePlan`, `garageColumn`, `house7`) |
 | **Your empty-hand arm angle** | `js/viewmodel.js` (`ARM`) |
 | **Driving / refuel / car breaking** | `js/vehicles.js` |
+| **Block damage** (bullets per block, car dents, chip / hole / claw-mark looks) | `js/damage.js` |
 
 A missing texture shows as a purple/black checkerboard, so you can see what still needs painting.
 If you add new blocks, add them at the **end** of `blocks.js` so old saves stay correct.
