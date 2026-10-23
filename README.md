@@ -39,6 +39,27 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | W/S · A/D · Space · Shift (in a car) | Drive · steer · brake · get out |
 | Esc | Pause |
 
+## v0.38 notes: new roads + sewers (new worlds)
+- **City avenues, 25 wide:** sidewalk 2 · white line · lane · dashes · lane · yellow line · **middle turn lane (3)** · yellow line · lane · dashes · lane · white line · sidewalk 2. Zebra crossings + signal masts at the corners.
+- **Main avenues / freeways, 21 wide:** the same without the middle lane (double yellow in the centre, white edge lines, 2-block sidewalks).
+- **Residential streets, 13 wide:** sidewalk 2 · white line · lane 3 · yellow centre line · lane 3 · white line · sidewalk 2.
+- **Sewers** under every town and city street, starting 5 blocks under the road (houses are never on streets, so they never hit a basement; none under the hospital grounds, malls or police stations). Stone-brick tunnel with mossy / grimy bricks, a water channel down the middle, walkways on both sides, 3 blocks of headroom; where streets cross, the tunnels meet.
+- **Manholes** in the road every 40 blocks: left-click the cover to open / shut it, ladder down. Sewer bricks + manhole covers are in the Crafting Book.
+- **Grimy sewer zombies** spawn in the dark tunnels while you're down there (greenish, a bit tougher). Torches keep them away like everywhere else.
+- All of this is for **new worlds** (old worlds keep their roads so nothing you built moves). Tweak sizes in `SEWER` at the top of `js/sewers.js`.
+
+## v0.37 notes: wooden desk, diamond tools look
+- **Wooden Desk** (Crafting Book → Furniture, 6 planks): 2 blocks wide, 1 tall — 3 drawers with metal handles on the left, legs, a back panel and a pencil drawer on the right, one long top. It runs to your right when you place it. **Paintable** with the roller (paint one half and the other matches). Break either half and the whole desk comes up.
+- **Diamond tools** are the iron tool models with a **purple** head and a **black** handle.
+
+## v0.36 notes: switch mode & time from Options
+- **Options → Mode: Survival / Creative ⇄** (only shows while you're in a world): flip any world between Survival and Creative (fly, Creative menu on E, no zombies, no damage) and back. Old Creative Realms stay flat — it's the rules that change, not the land.
+- **Options → Day → turn Night / Night → turn Day**: jumps straight to nightfall or to the next morning. In Creative it stays that time of day until you switch it back. (In multiplayer only the host can do these.)
+
+## v0.35 notes: furniture faces the right way, roofs overhang
+- **Fixed for good:** furniture in turned buildings (TVs, couches, chairs, tubs, toilets, sinks, mirrors, cabinets, beds…) faced the wrong way whenever its built-in direction was "0" — the turn skipped it. Every building that gets turned now turns all of its furniture with it. This also fixes houses in your existing worlds (anywhere you haven't changed the blocks yourself).
+- **Roofs stick out:** house roofs now run 1 block past the gable walls on both sides, so they don't look sliced off flush with the wall. New worlds only (old worlds keep their houses exactly where they are, so nothing you built gets moved).
+
 ## v0.34 notes: chunkier look, lights out, copper & diamonds
 - **Slightly 3D blocks:** every block face has a soft bevel (lit top edge, darker sides / bottom) so blocks look like chunky raised cubes, plus a brighter, more saturated cartoon colour grade.
 - **The grid is down:** street lamps, traffic signals, house lights, lamps and TVs don't work any more — only the **hospital** has power (its lights stay on 24/7). Switching something on elsewhere says "No power". Generators will plug into `DC.powered()` in `js/power.js`.
