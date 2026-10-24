@@ -23,7 +23,7 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 |---|---|
 | WASD | Move |
 | Space | Jump / climb ladders |
-| R or double-tap W | Sprint (keeps sprinting until you let go of W) |
+| R or double-tap W | Sprint (keeps sprinting until you let go of W). Holding a gun: R also reloads |
 | Shift | Sneak |
 | Left click | Mine / attack |
 | Right click | Place / use / open crafting table |
@@ -38,6 +38,94 @@ During the day you scavenge. At night the horde comes out, and if zombies **see 
 | Right click a car | Get in (with a Gas Can: refuel) |
 | W/S · A/D · Space · Shift (in a car) | Drive · steer · brake · get out |
 | Esc | Pause |
+
+## v0.54 notes: backpacks, armour, stamina, tree climbing, headshots
+**Backpacks.** You now start with just your 9 hotbar slots.
+- **Backpack** (school-bag style, common): +9 slots, one row. It's in wardrobes, garages and supply crates, or craft it from 8 cloth + 1 iron. Paintable.
+- **Military Backpack** (camo, rare): unlocks your whole inventory (+27). It's in supply crates and police lockers.
+- Wear one in the new **Backpack** slot (in your inventory, next to Left hand). You can also shift-click it, or right-click the air while holding it. What's in a backpack stays in it: take it off and its items go with it.
+- Holding a backpack, right-click the ground to set it down, like a paint bucket, with everything inside. Open it like a chest. Break it to pick it up again; it keeps its contents and its colour.
+- Paint a placed backpack with a roller or spray can. That's the colour it shows in your HUD (next to the hotbar), on your back in 3rd person, and in the world.
+- Old worlds: if you had things in your inventory, you get a Military Backpack, so nothing is lost.
+
+**Armour.** There are 4 new slots: helmet, chest, pants and boots.
+- The **Police Vest** (chest) is only found in the new lockers in police stations. It takes 45% of every hit and wears out as it does; at 0 it breaks.
+- About 40% of zombie cops wear one. Body shots barely hurt them until it breaks off, but headshots go straight through.
+- Shift-click armour to wear it, or right-click the air while holding it.
+
+**Stamina.** Sprinting uses stamina, shown as a thin red line over your hearts that fades away when you stop running. Run out and you can only jog (a bit faster than walking) and you get hungry faster until you catch your breath. Change the colour in Options → Colours → Stamina bar.
+
+**Food poisoning.** Zombies sometimes drop **Rotten Zombie Meat**. It fills you up, but it usually gives you food poisoning for 3 minutes: your hunger icons turn into rotten meat and you get hungry much faster.
+
+**Skills.**
+- Physicality: **Demolitionist**, your guns do +20% damage to breakable blocks per rank. (Iron Grip is still +4% mining speed per rank.)
+- Agility:
+  - **Mr Monkey**: walk up against a tree trunk and hold Jump to climb it like a ladder, up through the leaves to the top. Leaves hold you up when you stand on them; sneak to sink back down through them.
+  - **Endurance Runner**: −6% sprint stamina use per rank.
+- Health:
+  - **Rapid Recovery**: +6% healing from bandages and other healing items per rank.
+  - **Iron Stomach**: −10% food poisoning time per rank.
+- Three new branches under the level circle (Survival, Combat, Engineering) are marked coming soon. Scroll the tree to see them.
+
+**Headshots.** Zombies now have a small head hitbox. A bullet in the head kills any zombie outright; the brute just takes a huge hit. Also fixed: a shotgun blast no longer makes a zombie burst into ten bodies.
+
+**Menus and settings**
+- **Crafting Book:** bigger items and big ▲ ▼ scroll buttons. On phones it fills the screen. It remembers where you scrolled to, and there's a CRAFT ALL button.
+- **Options → HUD size:** makes the hotbar, hearts, ammo counter and clock bigger or smaller.
+- **Options → Blood: ON / OFF.** Off means no blood, stains or flying body parts; zombies vanish in a puff of dust instead.
+- **Options → Colours:** every colour opens a colour orb picker. New colours: Stamina bar and Menu colour (the purple used across the menus).
+
+## v0.53 notes: guns and ammo, DSR-50, HD textures, scarier zombies
+**Ammo.** Guns don't have infinite ammo any more. Each gun has a magazine, and the HUD in the bottom right shows **8 / 24** (rounds in the gun / rounds in your bag).
+- There are 4 ammo types. You craft them in the Crafting Book under Weapons, and each recipe makes one clip:
+
+| Ammo | For | Recipe | Makes |
+|---|---|---|---|
+| Small Ammo (9mm) | Pistol | 1 gold ingot + 1 iron ingot | 8 |
+| Medium Ammo (7.62) | Rifle | 1 gold + 3 iron | 30 |
+| Heavy Ammo (.50) | DSR-50 | 2 gold + 2 iron | 5 |
+| Shotgun Shells | Pump shotgun | 1 gold + 2 iron | 6 |
+
+- **Gold:** gold ore spawns 30+ blocks under the streets. You need a stone pickaxe or better. Smelt raw gold with coal to get a gold ingot. Supply crates sometimes have ammo and gold.
+- **Reload:** press **R** (the sprint key) while holding a gun that isn't full. If you keep running you still sprint. An empty gun reloads by itself when you pull the trigger. On a phone, the DROP button turns into RELOAD while you hold a gun.
+- Every gun has a reload animation. The pistol, rifle and DSR drop the old magazine and your left hand slaps in a new one. The shotgun loads one shell at a time and pumps at the end; shoot to stop loading early.
+- In Creative, magazines never run out.
+- **Bandits have limited ammo.** When a bandit runs out he pulls his machete and charges you. Dead bandits drop the rounds they didn't fire.
+
+**DSR-50** (works like the one in Call of Duty):
+- A bullpup, bolt-action sniper with 5 rounds of Heavy Ammo. It's in Creative and rare supply crates, or craft it (12 iron, 3 gold, 2 glass, 1 diamond).
+- Right-click to scope in (about 10x zoom, black scope with a red dot). Hip-fire is wild, so scope in.
+- After every shot you work the bolt, which drops you out of the scope. Keep holding right-click and you go back in.
+- The scope sways. Hold **Shift** to hold your breath and steady it for about 4 seconds.
+- One body shot kills any normal zombie, and a round goes through up to 3 zombies in a line.
+
+**Look**
+- Every block texture is now **32x32** in a cleaner, cartoony style. The big natural blocks (grass, dirt, stone, cobblestone, logs, planks, leaves, sand, gravel, bricks, ores) were painted from scratch; the rest were upscaled and smoothed. Edit any `textures/blocks/*.png` yourself. The old 16x16 ones are kept in `textures/blocks_16/`, and `tools/make_v53_hd.py` remakes the 32x32 set from them.
+- **Concrete, drywall and the hospital wall are seamless:** no soft edge around each block, so a wall reads as one smooth wall. Leaves lost the grid too.
+- **Bushier trees:** leaves that touch the air get round clumps of leaves sticking out past the block. Turn this off with `DC.config.fancyLeaves = false`.
+- **Clean 3D inventory pictures:** every block, including beds, chairs, buckets, stairs and fences, is a real 3D picture with a soft outline in the inventory and the Creative menu.
+
+**Zombies:** the purple is much brighter. Faces are scarier, with sunken glowing eyes and a hanging jaw full of teeth and blood. The models have far more 3D detail: brow ridges, noses, ears, clawed fingers, symbiote spikes, torn shirt flaps, exposed ribs, a cop's vest and radio, the monkey's fangs and claws, and the brute's tusks and shoulder spikes. Run `tools/make_v49_mobs.py` to remake them.
+
+**Wooden Desk:** the old one-block office desk is gone. Everywhere it was (police station, houses, ranch, Novera offices) there is now the 2-block oak desk with drawers, matching the nightstands and cabinets. Old desks already placed in your worlds now have the same oak look.
+
+## v0.50 notes: hiding in wardrobes
+- Inside a wardrobe (sneak + left-click it) you can shuffle around with WASD in its 2 wide x 1 deep x 2 tall space and look around.
+- It's pitch dark except for the real crack between the two doors. Lean in close and it gets wider; move to the side and it shifts across your view, so you can peek out at the zombies.
+- Change the room and the crack size in `DC.wardrobeBox` in `js/town.js`.
+
+## v0.49 notes: the infected roster
+Every zombie is now one of 6 infected: purple skin, red glowing eyes, black symbiote with glowing purple veins (they glow at night). The skins are twice as detailed as Minecraft's, still pixel art.
+- **Pedestrian A / B / C:** a torn white shirt, an olive hoodie with sneakers, and a bigger guy in a maroon vest and jeans. They limp, and some are crawlers.
+- **Zombie Cop:** navy uniform, police cap, badge, belt. Tougher and hits harder.
+- **Monkey Zombie:** runs on all fours, faster than you can sprint. From up to 7 blocks away it pounces at you and scratches. Low health.
+- **Brute:** 2.6 blocks tall, armoured in symbiote, 150 health.
+  - Hits from the front barely hurt it. Hit the **3 glowing weak points on its back** for triple damage.
+  - It grabs zombies near it and throws them at you.
+  - It picks up cars and throws them. They explode where they land, blowing up blocks nearby.
+  - Its punch knocks you flying. At most 1 brute at a time by day, 2 at night.
+- Tweak how common each one is, their health, speed and damage in `DC.zombieKinds` in `js/entities.js`.
+- The models and skins are in `models/<name>.geo.json` + `textures/entity/<name>.png`. Open them in Blockbench to reshape or repaint, or run `tools/make_v49_mobs.py` to make them again.
 
 ## v0.48 notes: Novera Corp, walk animation
 - **Novera Corp** ("Better Medicine, Better Health") — the Oscorp of this world. New city worlds get about one of each per city:

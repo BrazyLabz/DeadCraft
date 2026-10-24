@@ -103,8 +103,9 @@
     <div class="slider"><label class="lbl">Field of view <span class="v" id="oFovV"></span></label><input type="range" id="oFov" min="50" max="110" step="1"></div>
     <div class="slider"><label class="lbl">Look sensitivity <span class="v" id="oSensV"></span></label><input type="range" id="oSens" min="0.2" max="3" step="0.05"></div>
     <div class="slider"><label class="lbl">Resolution <span class="v" id="oScaleV"></span></label><input type="range" id="oScale" min="0.5" max="1" step="0.05"></div>
+    <div class="slider"><label class="lbl">HUD size <span class="v" id="oHudV"></span></label><input type="range" id="oHud" min="0.6" max="1.6" step="0.05"></div>
   </div>
-  <div class="row"><button class="btn" id="oShaders">Shaders</button><button class="btn" id="oGlow">Item glow</button></div>
+  <div class="row"><button class="btn" id="oShaders">Shaders</button><button class="btn" id="oGlow">Item glow</button><button class="btn" id="oBlood">Blood</button></div>
   <div class="row"><button class="btn" id="bColors">Colours…</button><button class="btn" id="bBuildings">Buildings…</button></div>
   <button class="btn touchonly" id="oPickBtn">Pick block button</button>
   <div class="optrow"><label class="lbl">Your skin <small id="oSkinInfo">Any Minecraft skin PNG (64×64 or the old 64×32).</small></label><button class="btn sm" id="oSkin">Upload skin…</button><button class="btn sm" id="oSkinReset">Default skin</button><input type="file" id="oSkinFile" accept="image/png,image/*" hidden></div>
@@ -129,6 +130,8 @@
   <div class="optrow"><label class="lbl">Hunger</label><select id="oHunger"><option value="apple">Red apples</option><option value="orange">Oranges</option><option value="watermelon">Watermelon</option><option value="bar">Bar</option></select><input type="color" id="oHungerColor" title="Bar colour"></div>
   <div class="optrow"><label class="lbl">Heart colour</label><input type="color" id="oHeartColor"></div>
   <div class="optrow"><label class="lbl">Hotbar selector</label><input type="color" id="oSelColor"></div>
+  <div class="optrow"><label class="lbl">Stamina bar</label><input type="color" id="oStamColor"></div>
+  <div class="optrow"><label class="lbl">Menu colour</label><input type="color" id="oAccentColor"></div>
   <button class="btn" id="oColorsReset">Reset colours</button>
   <button class="btn" id="bColorsDone">Done</button>
 </div></div>
@@ -246,6 +249,11 @@
 <script src="js/power.js"></script>
 <script src="js/ores.js"></script>
 <script src="js/desk.js"></script>
+<script src="js/polish.js"></script>
+<script src="js/guns.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/survival.js"></script>
+<script src="js/menus.js"></script>
 <script src="js/sewers.js"></script>
 <script src="js/neon.js"></script>
 <script src="js/skills.js"></script>
